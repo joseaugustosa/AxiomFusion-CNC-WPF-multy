@@ -40,12 +40,23 @@ public abstract class ControllerBase : IController
 
     public virtual void SetLaserPwm(double pct, int maxS)
     {
+        // Plasma em modo ONOFF: só M ligar/desligar, sem S
+        if (string.Equals(_mCodes.Mode, "ONOFF", StringComparison.OrdinalIgnoreCase))
+        {
+            SendMdi(pct > 0.001 ? _mCodes.On : _mCodes.Off);
+            return;
+        }
         int s = (int)(pct / 100.0 * maxS);
         SendMdi($"{_mCodes.On} S{s}");
     }
 
     public virtual void SetLaserTtl(bool on, int maxS)
     {
+        if (string.Equals(_mCodes.Mode, "ONOFF", StringComparison.OrdinalIgnoreCase))
+        {
+            SendMdi(on ? _mCodes.On : _mCodes.Off);
+            return;
+        }
         SendMdi(on ? $"{_mCodes.On} S{maxS}" : _mCodes.Off);
     }
 

@@ -1,0 +1,56 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.PlasmaPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+    </UserControl.Resources>
+    <GroupBox Header="Controlo Plasma" Style="{StaticResource DarkGroupBox}">
+        <StackPanel>
+            <StackPanel Orientation="Vertical" Margin="4,4,4,8">
+                <Label Content="Tocha:" Style="{StaticResource SmallLabel}"/>
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="RbPlasmaPwm" Content="S = intensidade (PWM)"
+                                 Foreground="#cdd6f4" Margin="0,0,12,0" GroupName="PlTorch"
+                                 Checked="PlasmaMode_Checked"/>
+                    <RadioButton x:Name="RbPlasmaM" Content="Só M ligar / desligar"
+                                 Foreground="#cdd6f4" GroupName="PlTorch"
+                                 Checked="PlasmaMode_Checked"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding PlasmaUsesIntensity, Converter={StaticResource BoolVis}}">
+                <Label Content="Corrente / potência (PWM):" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+                <Slider x:Name="SliderPwm" Minimum="0" Maximum="100" Value="{Binding LaserPwmPct}"
+                        Style="{StaticResource DarkSlider}" Margin="4,2"
+                        ValueChanged="SliderPwm_Changed"/>
+                <StackPanel Orientation="Horizontal" Margin="4,0">
+                    <TextBlock Text="{Binding LaserPwmPct, StringFormat={}{0:F0}%}"
+                               Foreground="#fab387" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock x:Name="TbSValue" Text=" S=500" Foreground="#6c7086"
+                               FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Margin="4,4" Visibility="{Binding PlasmaShowMOnlyTorch, Converter={StaticResource BoolVis}}">
+                <ToggleButton x:Name="BtnTtl" Content="TOCHA OFF"
+                              IsChecked="{Binding LaserTtlOn}"
+                              Style="{StaticResource LaserTtlButton}"
+                              Click="BtnTtl_Click" Height="44"/>
+            </StackPanel>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="4,8"/>
+
+            <Label Content="Disparo de teste (tocha):" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+            <StackPanel Orientation="Horizontal" Margin="4,4">
+                <Label Content="Duração:" Style="{StaticResource SmallLabel}" Width="64"/>
+                <TextBox x:Name="TbDuration" Text="500" Style="{StaticResource DarkTextBox}" Width="60"/>
+                <Label Content="ms" Style="{StaticResource SmallLabel}"/>
+            </StackPanel>
+            <Button Content="Teste de Tocha" Style="{StaticResource SmallButton}"
+                    Margin="4,2" Click="BtnTestFire_Click"/>
+
+            <TextBlock Text="Pierce (G4 após M ON) em Configuração → Controlador. S máximo em Laser / Plasma."
+                       Foreground="#6c7086" FontSize="11" Margin="4,10,4,0" TextWrapping="Wrap"/>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

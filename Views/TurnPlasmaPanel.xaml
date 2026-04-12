@@ -1,0 +1,98 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.TurnPlasmaPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+    </UserControl.Resources>
+    <GroupBox Header="Torno + Plasma" Style="{StaticResource DarkGroupBox}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <Border BorderBrush="#45475a" BorderThickness="0,0,0,1" Margin="0,0,0,4">
+                    <Label Content="— Torno —" Style="{StaticResource SmallLabel}"
+                           Foreground="#89b4fa" FontWeight="Bold" Margin="4,2"/>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="4,2">
+                    <TextBox x:Name="TbRpm" Width="70" Style="{StaticResource DarkTextBox}"
+                             Text="{Binding SpindleRpm, StringFormat={}{0:F0}}"
+                             LostFocus="TbRpm_LostFocus"/>
+                    <Label Content="RPM" Style="{StaticResource SmallLabel}"/>
+                    <Button Content="S" Style="{StaticResource SmallButton}" Margin="2,0"
+                            Command="{Binding ApplySpindleRpmCommand}" ToolTip="Enviar RPM"/>
+                </StackPanel>
+
+                <UniformGrid Rows="1" Columns="3" Margin="4,2">
+                    <Button Content="M3 ▶" Style="{StaticResource SmallButton}" Margin="2"
+                            Command="{Binding SpindleOnCommand}"/>
+                    <Button Content="M4 ◀" Style="{StaticResource SmallButton}" Margin="2"
+                            Command="{Binding SpindleReverseCommand}"/>
+                    <Button Content="M5 ■" Style="{StaticResource AbortButton}"  Margin="2"
+                            Command="{Binding SpindleOffCommand}"/>
+                </UniformGrid>
+
+                <CheckBox Content="Modo Diâmetro G7" Foreground="#cdd6f4" Margin="4,4"
+                          IsChecked="{Binding DiameterMode}" Click="DiameterMode_Click"/>
+
+                <UniformGrid Rows="1" Columns="2" Margin="4,2">
+                    <Button Content="M8  Refrigeração" Style="{StaticResource SmallButton}" Margin="2"
+                            Command="{Binding CoolantOnCmdCommand}"/>
+                    <Button Content="M9  OFF" Style="{StaticResource SmallButton}" Margin="2"
+                            Command="{Binding CoolantOffCmdCommand}"/>
+                </UniformGrid>
+
+                <Separator Style="{StaticResource DarkSeparator}" Margin="4,8"/>
+
+                <Border BorderBrush="#45475a" BorderThickness="0,0,0,1" Margin="0,0,0,4">
+                    <Label Content="— Plasma —" Style="{StaticResource SmallLabel}"
+                           Foreground="#fab387" FontWeight="Bold" Margin="4,2"/>
+                </Border>
+
+                <StackPanel Orientation="Vertical" Margin="4,0,4,6">
+                    <Label Content="Tocha:" Style="{StaticResource SmallLabel}" Margin="0,0,0,2"/>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="RbPlasmaPwm" Content="S = intensidade"
+                                     Foreground="#cdd6f4" Margin="0,0,12,0" GroupName="TpTorch"
+                                     Checked="PlasmaMode_Checked"/>
+                        <RadioButton x:Name="RbPlasmaM" Content="Só M ligar / desligar"
+                                     Foreground="#cdd6f4" GroupName="TpTorch"
+                                     Checked="PlasmaMode_Checked"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Margin="4,0,4,4" Visibility="{Binding PlasmaUsesIntensity, Converter={StaticResource BoolVis}}">
+                    <Label Content="Corrente (PWM %):" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+                    <Slider x:Name="SliderPwm" Minimum="0" Maximum="100"
+                            Value="{Binding LaserPwmPct}"
+                            Style="{StaticResource DarkSlider}" Margin="4,2"
+                            ValueChanged="SliderPwm_Changed"/>
+                    <StackPanel Orientation="Horizontal" Margin="4,0,4,4">
+                        <TextBlock Text="{Binding LaserPwmPct, StringFormat={}{0:F0}%}"
+                                   Foreground="#fab387" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock x:Name="TbSValue" Text=" S=500" Foreground="#6c7086"
+                                   FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <UniformGrid Rows="1" Columns="2" Margin="4,2">
+                    <Button Content="Tocha ON"  Style="{StaticResource SmallButton}" Margin="2"
+                            Command="{Binding TurnPlasmaOnCommand}"/>
+                    <Button Content="Tocha OFF" Style="{StaticResource SmallButton}" Margin="2"
+                            Command="{Binding TurnPlasmaOffCommand}"/>
+                </UniformGrid>
+
+                <Separator Style="{StaticResource DarkSeparator}" Margin="4,4"/>
+
+                <StackPanel Orientation="Horizontal" Margin="4,2">
+                    <Label Content="Teste:" Style="{StaticResource SmallLabel}" Width="48"/>
+                    <TextBox x:Name="TbDuration" Text="500" Width="55"
+                             Style="{StaticResource DarkTextBox}"/>
+                    <Label Content="ms" Style="{StaticResource SmallLabel}"/>
+                    <Button Content="Disparar" Style="{StaticResource SmallButton}" Margin="4,0,0,0"
+                            Click="BtnTestFire_Click"/>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </GroupBox>
+</UserControl>

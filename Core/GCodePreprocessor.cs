@@ -24,9 +24,11 @@ public static class GCodePreprocessor
         return machine switch
         {
             MachineType.Laser     => PreprocessLaser(lines, laserCodes),
+            MachineType.Plasma    => PreprocessLaser(lines, laserCodes),
             MachineType.Drill     => PreprocessDrill(lines, spindleCodes),
             MachineType.Turn      => PreprocessTurn(lines, spindleCodes),
             MachineType.TurnLaser => PreprocessTurnLaser(lines, laserCodes, spindleCodes),
+            MachineType.TurnPlasma => PreprocessTurnLaser(lines, laserCodes, spindleCodes),
             _                     => lines,
         };
     }

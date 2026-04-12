@@ -4,9 +4,11 @@ namespace AxiomFusion.CncController.Core;
 public enum MachineType
 {
     Laser,      // Laser 2D (corte / gravação)
+    Plasma,     // Corte a plasma (tocha M3/M5 + pierce — mesmo pipeline que laser GRBL)
     Drill,      // Fresa / Furadeira CNC
     Turn,       // Torno CNC
     TurnLaser,  // Torno + Laser combinado
+    TurnPlasma, // Torno + Plasma (tocha M7/M107 ou configurável — spindle separado)
 }
 
 /// <summary>M-codes para controlo de spindle (fresa/torno).</summary>
@@ -27,17 +29,21 @@ public static class MachineProfiles
         new Dictionary<MachineType, SpindleCodes>
         {
             [MachineType.Laser]      = new("M3","M4","M5","M8","M9",1000,"$H","$X"),
+            [MachineType.Plasma]     = new("M3","M4","M5","M8","M9",1000,"$H","$X"),
             [MachineType.Drill]      = new("M3","M4","M5","M8","M9",24000,"$H","$X"),
             [MachineType.Turn]       = new("M3","M4","M5","M8","M9",3000,"$H","$X"),
             [MachineType.TurnLaser]  = new("M3","M4","M5","M8","M9",3000,"$H","$X"),
+            [MachineType.TurnPlasma] = new("M3","M4","M5","M8","M9",3000,"$H","$X"),
         };
 
     public static string DisplayName(MachineType t) => t switch
     {
         MachineType.Laser     => "Laser",
+        MachineType.Plasma    => "Plasma",
         MachineType.Drill     => "Fresa/Furadeira",
         MachineType.Turn      => "Torno",
         MachineType.TurnLaser => "Torno + Laser",
+        MachineType.TurnPlasma => "Torno + Plasma",
         _                     => t.ToString(),
     };
 }

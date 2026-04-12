@@ -6,11 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net8.0-windows/AxiomFusion.CncController.exe",
+            "program": "${workspaceFolder}/bin/Debug/net8.0-windows/AxiomFusion.CncController.dll",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
-            "stopAtEntry": false
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

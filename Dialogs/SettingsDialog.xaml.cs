@@ -27,9 +27,11 @@ public partial class SettingsDialog : Window
         // ── Tab: Tipo de Máquina ──────────────────────────────────────────
         var mt = _s.GetMachineType();
         RbLaser.IsChecked     = mt == MachineType.Laser;
+        RbPlasma.IsChecked    = mt == MachineType.Plasma;
         RbDrill.IsChecked     = mt == MachineType.Drill;
         RbTurn.IsChecked      = mt == MachineType.Turn;
         RbTurnLaser.IsChecked = mt == MachineType.TurnLaser;
+        RbTurnPlasma.IsChecked = mt == MachineType.TurnPlasma;
 
         TbSpindleOnFwd.Text  = _s.GetString("spindle_on_fwd",  "M3");
         TbSpindleOnRev.Text  = _s.GetString("spindle_on_rev",  "M4");
@@ -39,6 +41,8 @@ public partial class SettingsDialog : Window
         TbCoolantOff.Text    = _s.GetString("coolant_off",     "M9");
         TbTurnLaserOn.Text   = _s.GetString("turn_laser_on",   "M7");
         TbTurnLaserOff.Text  = _s.GetString("turn_laser_off",  "M107");
+        TbTurnPlasmaOn.Text  = _s.GetString("turn_plasma_on",  "M7");
+        TbTurnPlasmaOff.Text = _s.GetString("turn_plasma_off", "M107");
 
         // ── Tab: Controlador ──────────────────────────────────────────────
         RbGrbl.IsChecked  = _s.GetString("controller_type", "GRBL") == "GRBL";
@@ -49,10 +53,14 @@ public partial class SettingsDialog : Window
         TbUnlock.Text     = _s.GetString("m_unlock",     "$X");
         TbPierce.Text     = _s.GetDouble("m_pierce",     0.5).ToString("F2", CultureInfo.InvariantCulture);
 
-        // ── Tab: Laser ────────────────────────────────────────────────────
+        // ── Tab: Laser / Plasma ───────────────────────────────────────────
         TbMaxS.Text       = _s.GetInt("laser_max_s",     1000).ToString();
+        TbPlasmaMaxS.Text = _s.GetInt("plasma_max_s",    1000).ToString();
         RbPwm.IsChecked   = _s.GetString("laser_mode",   "PWM") == "PWM";
         RbTtl.IsChecked   = !RbPwm.IsChecked;
+        var pMode = _s.GetString("plasma_mode", "PWM");
+        RbPlasmaPwm.IsChecked   = pMode != "ONOFF";
+        RbPlasmaOnOff.IsChecked = pMode == "ONOFF";
 
         // ── Tab: Ligação ──────────────────────────────────────────────────
         TbPort.Text       = _s.GetString("port",         "COM3");
@@ -68,7 +76,9 @@ public partial class SettingsDialog : Window
     public void SaveToSettings(SettingsManager s)
     {
         // ── Tipo de Máquina ───────────────────────────────────────────────
-        var mt = RbDrill.IsChecked == true ? MachineType.Drill
+        var mt = RbTurnPlasma.IsChecked == true ? MachineType.TurnPlasma
+               : RbPlasma.IsChecked == true ? MachineType.Plasma
+               : RbDrill.IsChecked == true ? MachineType.Drill
                : RbTurn.IsChecked  == true ? MachineType.Turn
                : RbTurnLaser.IsChecked == true ? MachineType.TurnLaser
                : MachineType.Laser;
@@ -82,6 +92,8 @@ public partial class SettingsDialog : Window
         s.Set("coolant_off",     TbCoolantOff.Text.Trim());
         s.Set("turn_laser_on",   TbTurnLaserOn.Text.Trim());
         s.Set("turn_laser_off",  TbTurnLaserOff.Text.Trim());
+        s.Set("turn_plasma_on",  TbTurnPlasmaOn.Text.Trim());
+        s.Set("turn_plasma_off", TbTurnPlasmaOff.Text.Trim());
 
         // ── Controlador ───────────────────────────────────────────────────
         s.Set("controller_type", RbGrbl.IsChecked == true ? "GRBL" : "ISO");
@@ -92,9 +104,11 @@ public partial class SettingsDialog : Window
         if (double.TryParse(TbPierce.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var pierce))
             s.Set("m_pierce", pierce);
 
-        // ── Laser ─────────────────────────────────────────────────────────
+        // ── Laser / Plasma ────────────────────────────────────────────────
         if (int.TryParse(TbMaxS.Text, out var maxS)) s.Set("laser_max_s", maxS);
+        if (int.TryParse(TbPlasmaMaxS.Text, out var pMaxS)) s.Set("plasma_max_s", pMaxS);
         s.Set("laser_mode", RbPwm.IsChecked == true ? "PWM" : "TTL");
+        s.Set("plasma_mode", RbPlasmaOnOff.IsChecked == true ? "ONOFF" : "PWM");
 
         // ── Ligação ───────────────────────────────────────────────────────
         s.Set("port", TbPort.Text.Trim());

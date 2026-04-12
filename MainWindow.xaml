@@ -133,6 +133,9 @@
                 <!-- Laser -->
                 <views:LaserPanel     DataContext="{Binding}"
                                       Visibility="{Binding LaserPanelVisible}"/>
+                <!-- Plasma -->
+                <views:PlasmaPanel    DataContext="{Binding}"
+                                      Visibility="{Binding PlasmaPanelVisible}"/>
                 <!-- Fresa / Furadeira -->
                 <views:DrillPanel     DataContext="{Binding}"
                                       Visibility="{Binding DrillPanelVisible}"/>
@@ -142,6 +145,9 @@
                 <!-- Torno + Laser -->
                 <views:TurnLaserPanel DataContext="{Binding}"
                                       Visibility="{Binding TurnLaserPanelVisible}"/>
+                <!-- Torno + Plasma -->
+                <views:TurnPlasmaPanel DataContext="{Binding}"
+                                       Visibility="{Binding TurnPlasmaPanelVisible}"/>
             </DockPanel>
         </Grid>
     </DockPanel>

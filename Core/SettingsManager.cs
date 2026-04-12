@@ -52,6 +52,14 @@ public class SettingsManager
         ["turn_laser_on"]     = "M7",
         ["turn_laser_off"]    = "M107",
 
+        // Plasma — PWM = S define intensidade | ONOFF = só M ligar/desligar (sem S)
+        ["plasma_mode"]       = "PWM",
+        ["plasma_max_s"]      = 1000,
+
+        // TurnPlasma — tocha (como TurnLaser; CAM costuma usar M7/M107)
+        ["turn_plasma_on"]    = "M7",
+        ["turn_plasma_off"]   = "M107",
+
         // Jog
         ["jog_feed"]          = 500.0,
         ["jog_step"]          = 1.0,
@@ -161,6 +169,21 @@ public class SettingsManager
         Pierce: GetDouble("m_pierce",    0.5),
         Home:   GetString("m_home",      "$H"),
         Unlock: GetString("m_unlock",    "$X"));
+
+    /// <summary>MCodes para plasma (modo próprio: intensidade S vs só M).</summary>
+    public MCodes BuildPlasmaMCodes()
+    {
+        int maxS = GetInt("plasma_max_s", 0);
+        if (maxS <= 0) maxS = GetInt("laser_max_s", 1000);
+        return new MCodes(
+            On:     GetString("m_on",  "M3"),
+            Off:    GetString("m_off", "M5"),
+            MaxS:   maxS,
+            Mode:   GetString("plasma_mode", "PWM"),
+            Pierce: GetDouble("m_pierce", 0.5),
+            Home:   GetString("m_home",   "$H"),
+            Unlock: GetString("m_unlock", "$X"));
+    }
 
     public SpindleCodes BuildSpindleCodes() => new(
         SpindleOnFwd: GetString("spindle_on_fwd", "M3"),

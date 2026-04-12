@@ -65,9 +65,22 @@ public partial class MainViewModel : ObservableObject
 
     // Visibilidade dos painéis direitos
     [ObservableProperty] private Visibility _laserPanelVisible     = Visibility.Visible;
+    [ObservableProperty] private Visibility _plasmaPanelVisible    = Visibility.Collapsed;
     [ObservableProperty] private Visibility _drillPanelVisible     = Visibility.Collapsed;
     [ObservableProperty] private Visibility _turnPanelVisible      = Visibility.Collapsed;
     [ObservableProperty] private Visibility _turnLaserPanelVisible = Visibility.Collapsed;
+    [ObservableProperty] private Visibility _turnPlasmaPanelVisible  = Visibility.Collapsed;
+
+    /// <summary>Plasma: true = intensidade via S (PWM), false = só M ligar/desligar.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PlasmaShowMOnlyTorch))]
+    private bool _plasmaUsesIntensity = true;
+
+    /// <summary>Para visibilidade do painel só-M na UI plasma.</summary>
+    public bool PlasmaShowMOnlyTorch => !PlasmaUsesIntensity;
+
+    /// <summary>S máximo para labels no painel torno+plasma (binding).</summary>
+    public int PlasmaMaxSForUi => MaxSForTorch();
 
     // Label dinâmico no StatusPanel ("Laser S:" vs "Spindle RPM:")
     [ObservableProperty] private string _spindleOrLaserLabel = "Laser S:";
@@ -192,13 +205,25 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void SetLaserPwm()
-        => _ctrl.SetLaserPwm(LaserPwmPct, _settings.GetInt("laser_max_s", 1000));
+        => _ctrl.SetLaserPwm(LaserPwmPct, MaxSForTorch());
 
     [RelayCommand]
     private void ToggleLaserTtl()
     {
         LaserTtlOn = !LaserTtlOn;
-        _ctrl.SetLaserTtl(LaserTtlOn, _settings.GetInt("laser_max_s", 1000));
+        _ctrl.SetLaserTtl(LaserTtlOn, MaxSForTorch());
+    }
+
+    /// <summary>Plasma: alternar entre S=intensidade e só M (persiste em plasma_mode).</summary>
+    [RelayCommand]
+    private void SetPlasmaTorchMode(object? param)
+    {
+        bool pwm = param is string s && s == "PWM";
+        PlasmaUsesIntensity = pwm;
+        _settings.Set("plasma_mode", pwm ? "PWM" : "ONOFF");
+        LaserMode = pwm ? "PWM" : "TTL";
+        _ctrl.UpdateMCodes(CodesForController());
+        RefreshTorchStatusLabel();
     }
 
     // ── Spindle (Drill / Turn) ────────────────────────────────────────────
@@ -294,6 +319,24 @@ public partial class MainViewModel : ObservableObject
     private void TurnLaserOff()
         => _ctrl.SendMdi(_settings.GetString("turn_laser_off", "M107"));
 
+    [RelayCommand]
+    private void TurnPlasmaOn()
+    {
+        var pl  = _settings.BuildPlasmaMCodes();
+        var mOn = _settings.GetString("turn_plasma_on", "M7").Trim();
+        if (string.Equals(pl.Mode, "ONOFF", StringComparison.OrdinalIgnoreCase))
+            _ctrl.SendMdi(mOn);
+        else
+        {
+            int s = (int)(LaserPwmPct / 100.0 * pl.MaxS);
+            _ctrl.SendMdi($"{mOn} S{s}");
+        }
+    }
+
+    [RelayCommand]
+    private void TurnPlasmaOff()
+        => _ctrl.SendMdi(_settings.GetString("turn_plasma_off", "M107").Trim());
+
     // ── WCS / Zero ────────────────────────────────────────────────────────
 
     [RelayCommand]
@@ -339,14 +382,24 @@ public partial class MainViewModel : ObservableObject
         MachineName      = MachineProfiles.DisplayName(mt);
         SelectedMachineName = MachineName;
 
-        LaserPanelVisible     = mt == MachineType.Laser     ? Visibility.Visible : Visibility.Collapsed;
-        DrillPanelVisible     = mt == MachineType.Drill     ? Visibility.Visible : Visibility.Collapsed;
-        TurnPanelVisible      = mt == MachineType.Turn      ? Visibility.Visible : Visibility.Collapsed;
-        TurnLaserPanelVisible = mt == MachineType.TurnLaser ? Visibility.Visible : Visibility.Collapsed;
+        LaserPanelVisible      = mt == MachineType.Laser      ? Visibility.Visible : Visibility.Collapsed;
+        PlasmaPanelVisible     = mt == MachineType.Plasma     ? Visibility.Visible : Visibility.Collapsed;
+        DrillPanelVisible      = mt == MachineType.Drill      ? Visibility.Visible : Visibility.Collapsed;
+        TurnPanelVisible       = mt == MachineType.Turn       ? Visibility.Visible : Visibility.Collapsed;
+        TurnLaserPanelVisible  = mt == MachineType.TurnLaser  ? Visibility.Visible : Visibility.Collapsed;
+        TurnPlasmaPanelVisible = mt == MachineType.TurnPlasma ? Visibility.Visible : Visibility.Collapsed;
 
-        SpindleOrLaserLabel = mt == MachineType.Laser ? "Laser S:" : "Spindle:";
+        PlasmaUsesIntensity = string.Equals(_settings.GetString("plasma_mode", "PWM"), "PWM",
+            StringComparison.OrdinalIgnoreCase);
+        if (mt is MachineType.Plasma or MachineType.TurnPlasma)
+            LaserMode = PlasmaUsesIntensity ? "PWM" : "TTL";
+        else if (mt is MachineType.Laser or MachineType.TurnLaser)
+            LaserMode = string.Equals(_settings.GetString("laser_mode", "PWM"), "PWM", StringComparison.OrdinalIgnoreCase)
+                ? "PWM" : "TTL";
+        RefreshTorchStatusLabel();
 
         _settings.SetMachineType(mt);
+        _ctrl.UpdateMCodes(CodesForController());
 
         if (notify)
             StatusMessage = $"Modo máquina: {MachineName}";
@@ -356,10 +409,10 @@ public partial class MainViewModel : ObservableObject
 
     public void OnProgramLoaded(GCodeProgram program)
     {
-        var laserCodes   = _settings.BuildMCodes();
+        var torchCodes   = TorchCodesForProgram();
         var spindleCodes = _settings.BuildSpindleCodes();
         program.Lines = GCodePreprocessor.PreprocessForMachine(
-            program.Lines, CurrentMachine, laserCodes, spindleCodes);
+            program.Lines, CurrentMachine, torchCodes, spindleCodes);
         program.LineCount = program.Lines.Count;
 
         var linesToCheck = program.Lines.Count > 500
@@ -411,10 +464,44 @@ public partial class MainViewModel : ObservableObject
 
     private IController CreateController()
     {
-        var codes = _settings.BuildMCodes();
+        var codes = CodesForController();
         return _settings.GetString("controller_type", "GRBL") == "GRBL"
             ? new GrblController(codes)
             : new IsoController(codes);
+    }
+
+    private MCodes CodesForController()
+    {
+        var mt = _settings.GetMachineType();
+        return mt is MachineType.Plasma or MachineType.TurnPlasma
+            ? _settings.BuildPlasmaMCodes()
+            : _settings.BuildMCodes();
+    }
+
+    private MCodes TorchCodesForProgram()
+        => CurrentMachine is MachineType.Plasma or MachineType.TurnPlasma
+            ? _settings.BuildPlasmaMCodes()
+            : _settings.BuildMCodes();
+
+    private int MaxSForTorch()
+    {
+        if (CurrentMachine is MachineType.Plasma or MachineType.TurnPlasma)
+        {
+            int p = _settings.GetInt("plasma_max_s", 0);
+            return p > 0 ? p : _settings.GetInt("laser_max_s", 1000);
+        }
+        return _settings.GetInt("laser_max_s", 1000);
+    }
+
+    private void RefreshTorchStatusLabel()
+    {
+        SpindleOrLaserLabel = CurrentMachine switch
+        {
+            MachineType.Laser      => "Laser S:",
+            MachineType.Plasma     => PlasmaUsesIntensity ? "Plasma S:" : "Tocha:",
+            MachineType.TurnPlasma => PlasmaUsesIntensity ? "Plasma S:" : "Tocha:",
+            _                      => "Spindle:",
+        };
     }
 
     private void ConnectControllerEvents()

@@ -83,15 +83,29 @@
                     </h:MeshGeometryVisual3D.BackMaterial>
                 </h:MeshGeometryVisual3D>
 
+                <!-- Cores em forte contraste com o fundo #11111b -->
                 <h:LinesVisual3D x:Name="PathRapid"
-                                 Color="#446677" Thickness="1"/>
+                                 Color="#b4befe" Thickness="1.25"/>
                 <h:LinesVisual3D x:Name="PathTravel"
-                                 Color="#4466ff" Thickness="1.5"/>
+                                 Color="#f9e2af" Thickness="1.75"/>
                 <h:LinesVisual3D x:Name="PathCut"
-                                 Color="#ff4444" Thickness="2"/>
+                                 Color="#ff6b6b" Thickness="2.5"/>
 
                 <h:LinesVisual3D x:Name="PathCurrent"
-                                 Color="#ffff00" Thickness="3"/>
+                                 Color="#ffffff" Thickness="3.5"/>
+
+                <!-- Bico do laser durante simulação: esfera (corpo) + seta (feixe até ao ponto de corte) -->
+                <h:SphereVisual3D x:Name="LaserNozzleSphere" Radius="3.2" Visible="False">
+                    <h:SphereVisual3D.Fill>
+                        <SolidColorBrush Color="#ff7a4a"/>
+                    </h:SphereVisual3D.Fill>
+                </h:SphereVisual3D>
+                <h:ArrowVisual3D x:Name="LaserNozzleBeam" Visible="False"
+                                 Diameter="2.2" HeadLength="6">
+                    <h:ArrowVisual3D.Fill>
+                        <SolidColorBrush Color="#ffaa77"/>
+                    </h:ArrowVisual3D.Fill>
+                </h:ArrowVisual3D>
             </h:HelixViewport3D>
 
             <!-- Marca de água (logo) — não interfere com orbit / pan / zoom -->

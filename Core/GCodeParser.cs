@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace AxiomFusion.CncController.Core;
@@ -5,22 +6,42 @@ namespace AxiomFusion.CncController.Core;
 public class GCodeParser
 {
     private static readonly Regex TokenRx = new(@"([A-Z])([-+]?[0-9]*\.?[0-9]+)", RegexOptions.Compiled);
+    private static readonly Regex McodeRx = new(@"\bM(-?\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public GCodeProgram LoadFile(string filepath)
     {
         var prog = new GCodeProgram { Filepath = filepath };
-        prog.Lines    = File.ReadAllLines(filepath).ToList();
-        prog.LineCount = prog.Lines.Count;
-        prog.Toolpath = ParseToolpath(prog.Lines, prog.Warnings);
+        prog.Lines       = File.ReadAllLines(filepath).ToList();
+        prog.SourceLines = prog.Lines.ToList();
+        prog.LineCount   = prog.Lines.Count;
+
+        prog.Toolpath = BuildToolpath(prog.Lines, MachineType.Laser, 3, 5);
         prog.Bounds   = ComputeBounds(prog.Toolpath);
         return prog;
     }
 
-    // ── Parser interno ────────────────────────────────────────────────────
-
-    private static List<ToolpathMove> ParseToolpath(List<string> lines, List<string> warnings)
+    /// <summary>Tenta extrair o número de um M-code (ex.: "M7", "M107" → 7, 107).</summary>
+    public static bool TryParseMCodeNumber(string? s, out int code)
     {
-        var moves   = new List<ToolpathMove>();
+        code = 0;
+        if (string.IsNullOrWhiteSpace(s)) return false;
+        var m = Regex.Match(s.Trim(), @"^M(-?\d+)$", RegexOptions.IgnoreCase);
+        if (!m.Success) return false;
+        return int.TryParse(m.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out code);
+    }
+
+    /// <summary>
+    /// Percurso para simulação: estado do feixe/tocha conforme o tipo de máquina.
+    /// Laser/Plasma 2D: M configurados + convenção GRBL M3/M4 ligar, M5/M9 desligar.
+    /// Torno + laser/plasma: só os M configurados (ex. M7/M107); M3–M5 são spindle, não tocha.
+    /// </summary>
+    public static List<ToolpathMove> BuildToolpath(
+        List<string> lines,
+        MachineType  machine,
+        int          torchOnCode,
+        int          torchOffCode)
+    {
+        var moves = new List<ToolpathMove>();
         double x = 0, y = 0, z = 0, a = 0, feed = 0;
         string modalG  = "G0";
         bool   absMode = true;
@@ -29,15 +50,16 @@ public class GCodeParser
         for (int idx = 0; idx < lines.Count; idx++)
         {
             var raw  = lines[idx];
-            var line = (raw.Contains(';') ? raw[..raw.IndexOf(';')] : raw).Trim().ToUpperInvariant();
+            var line = StripComment(raw).Trim();
             if (string.IsNullOrEmpty(line)) continue;
+
+            line = line.ToUpperInvariant();
+            ApplyTorchState(ref laserOn, line, machine, torchOnCode, torchOffCode);
 
             var words = new Dictionary<char, double>();
             foreach (Match m in TokenRx.Matches(line))
-                words[m.Groups[1].Value[0]] = double.Parse(m.Groups[2].Value,
-                    System.Globalization.CultureInfo.InvariantCulture);
+                words[m.Groups[1].Value[0]] = double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
 
-            // Modo abs/incremental
             if (words.TryGetValue('G', out var gval))
             {
                 int g = (int)gval;
@@ -46,18 +68,8 @@ public class GCodeParser
                 else if (g is 0 or 1) modalG = $"G{g}";
             }
 
-            // Feed
             if (words.TryGetValue('F', out var fval)) feed = fval;
 
-            // Laser
-            if (words.TryGetValue('M', out var mval))
-            {
-                int m = (int)mval;
-                if (m is 3 or 4) laserOn = true;
-                else if (m is 5 or 9) laserOn = false;
-            }
-
-            // Movimento
             bool hasMove = words.ContainsKey('X') || words.ContainsKey('Y')
                         || words.ContainsKey('Z') || words.ContainsKey('A');
             if (!hasMove) continue;
@@ -68,7 +80,6 @@ public class GCodeParser
             if (words.TryGetValue('Z', out var zv)) nz = absMode ? zv : z + zv;
             if (words.TryGetValue('A', out var av)) na = absMode ? av : a + av;
 
-            // G de movimento na linha tem precedência
             if (words.TryGetValue('G', out var gm)) modalG = (int)gm == 0 ? "G0" : "G1";
 
             moves.Add(new ToolpathMove(nx, ny, nz, na, feed,
@@ -79,7 +90,38 @@ public class GCodeParser
         return moves;
     }
 
-    private static AxisBounds ComputeBounds(List<ToolpathMove> toolpath)
+    private static string StripComment(string raw)
+    {
+        if (!raw.Contains(';')) return raw;
+        return raw[..raw.IndexOf(';')];
+    }
+
+    private static void ApplyTorchState(
+        ref bool      laserOn,
+        string        lineUpper,
+        MachineType   machine,
+        int           torchOnCode,
+        int           torchOffCode)
+    {
+        foreach (Match m in McodeRx.Matches(lineUpper))
+        {
+            if (!int.TryParse(m.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var code))
+                continue;
+
+            if (machine is MachineType.TurnLaser or MachineType.TurnPlasma)
+            {
+                if (code == torchOffCode) laserOn = false;
+                else if (code == torchOnCode) laserOn = true;
+            }
+            else
+            {
+                if (code == torchOnCode || code is 3 or 4) laserOn = true;
+                if (code == torchOffCode || code is 5 or 9) laserOn = false;
+            }
+        }
+    }
+
+    public static AxisBounds ComputeBounds(List<ToolpathMove> toolpath)
     {
         if (toolpath.Count == 0)
             return new AxisBounds { XMax = 100, YMax = 100, ZMax = 50, AMax = 360 };

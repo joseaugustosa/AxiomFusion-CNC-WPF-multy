@@ -279,6 +279,26 @@
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
+
+                        <GroupBox Header="Simulação do percurso" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <StackPanel Margin="4">
+                                <TextBlock Foreground="#6c7086" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                           Text="Velocidade em relação ao feed F do programa e ao avanço em G0. 100% = tempo proporcional ao avanço."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="SldSimulationSpeed" Grid.Column="0"
+                                            Minimum="10" Maximum="400" TickFrequency="5"
+                                            IsSnapToTickEnabled="False"
+                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" MinWidth="48"
+                                               Foreground="#cdd6f4" FontSize="12"
+                                               Text="{Binding Value, ElementName=SldSimulationSpeed, StringFormat={}{0:F0}%}"/>
+                                </Grid>
+                            </StackPanel>
+                        </GroupBox>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

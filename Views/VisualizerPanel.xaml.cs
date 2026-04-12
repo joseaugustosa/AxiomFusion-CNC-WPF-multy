@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
+using MediaColor = System.Windows.Media.Color;
 using AxiomFusion.CncController.Core;
 using AxiomFusion.CncController.Dialogs;
 using AxiomFusion.CncController.Visualizer;
@@ -267,6 +268,7 @@ public partial class VisualizerPanel : UserControl
         }
 
         RebuildLines();
+        HideLaserNozzle();
         FitView();
     }
 
@@ -280,11 +282,18 @@ public partial class VisualizerPanel : UserControl
 
     // ── Highlight de linha ────────────────────────────────────────────────
 
-    public void HighlightLine(int lineIndex)
+    /// <param name="showLaserNozzle">Durante simulação: mostra bico + feixe no 3D.</param>
+    public void HighlightLine(int lineIndex, bool showLaserNozzle = false)
     {
         if (_moves is null) return;
         var hits = _moves.Where(m => m.LineIndex == lineIndex).ToList();
-        if (hits.Count == 0) return;
+        if (hits.Count == 0)
+        {
+            PathCurrent.Points = [];
+            if (showLaserNozzle)
+                HideLaserNozzle();
+            return;
+        }
 
         var pts = new Point3DCollection();
         foreach (var m in hits)
@@ -293,6 +302,63 @@ public partial class VisualizerPanel : UserControl
             pts.Add(p); pts.Add(p); // Ponto → segmento de comprimento 0 → destaque
         }
         PathCurrent.Points = pts;
+
+        if (!showLaserNozzle)
+        {
+            HideLaserNozzle();
+            return;
+        }
+
+        var last = hits[^1];
+        var tip  = ToolpathMath.ToWorld(last.X, last.A, last.Z);
+        UpdateLaserNozzle(tip, last.A, last);
+    }
+
+    /// <summary>Simulação: bico move-se ao longo do segmento; linha activa do P0 do segmento até à ponta.</summary>
+    public void UpdateSimulationPose(Point3D tipWorld, Point3D segmentStartWorld, double aDeg, bool cutting)
+    {
+        PathCurrent.Points = new Point3DCollection { segmentStartWorld, tipWorld };
+        UpdateLaserNozzle(tipWorld, aDeg, cutting);
+    }
+
+    /// <summary>Esconde o bico/feixe (fim da simulação ou destaque só da linha).</summary>
+    public void HideLaserNozzle()
+    {
+        LaserNozzleSphere.Visible = false;
+        LaserNozzleBeam.Visible   = false;
+    }
+
+    private void UpdateLaserNozzle(Point3D tipWorld, double aDeg, ToolpathMove move)
+        => UpdateLaserNozzle(tipWorld, aDeg, move.LaserOn && !move.IsRapid);
+
+    /// <summary>Orientação: eixo do feixe = -Z máquina (radial para o eixo do tubo); bico fora ao longo de +Z máquina.</summary>
+    private void UpdateLaserNozzle(Point3D tipWorld, double aDeg, bool cutting)
+    {
+        var radialOut = new Vector3D(0, tipWorld.Y, tipWorld.Z);
+        if (radialOut.LengthSquared < 1e-10)
+            radialOut = ToolpathMath.MachineZOutwardWorld(aDeg);
+        else
+            radialOut.Normalize();
+
+        const double nozzleOffset = 11.0;
+        var nozzlePos = tipWorld + radialOut * nozzleOffset;
+
+        LaserNozzleSphere.Center = nozzlePos;
+        LaserNozzleBeam.Point1   = nozzlePos;
+        LaserNozzleBeam.Point2   = tipWorld;
+
+        var hot  = MediaColor.FromRgb(255, 110, 70);
+        var cool = MediaColor.FromRgb(150, 200, 255);
+        var c    = cutting ? hot : cool;
+
+        LaserNozzleSphere.Fill = new SolidColorBrush(c);
+        LaserNozzleBeam.Fill   = new SolidColorBrush(MediaColor.FromRgb(
+            (byte)Math.Clamp(c.R + 25, 0, 255),
+            (byte)Math.Clamp(c.G + 15, 0, 255),
+            (byte)Math.Clamp(c.B + 10, 0, 255)));
+
+        LaserNozzleSphere.Visible = true;
+        LaserNozzleBeam.Visible   = true;
     }
 
     // ── Controlos de câmara ───────────────────────────────────────────────

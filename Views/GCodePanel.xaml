@@ -18,6 +18,18 @@
                            VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"/>
             </DockPanel>
 
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                <TextBlock DockPanel.Dock="Left" Text="Vel. simulação:" VerticalAlignment="Center"
+                           Foreground="#6c7086" FontSize="11" Margin="0,0,8,0"
+                           ToolTip="Velocidade do modo Simular (também em Configuração → Visualização)."/>
+                <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" MinWidth="40"
+                           Foreground="#cdd6f4" FontSize="11"
+                           Text="{Binding SimulationSpeedPercent, StringFormat={}{0:F0}%}"/>
+                <Slider Minimum="10" Maximum="400" TickFrequency="10"
+                        VerticalAlignment="Center"
+                        Value="{Binding SimulationSpeedPercent, Mode=TwoWay}"/>
+            </DockPanel>
+
             <!-- Barra de progresso -->
             <DockPanel DockPanel.Dock="Bottom">
                 <ProgressBar x:Name="PbProgress" Height="14" Margin="0,4,0,0"
@@ -31,10 +43,40 @@
                         Margin="0,4" HorizontalAlignment="Center">
                 <Button Width="100" Style="{StaticResource StartButton}"
                         Command="{Binding StartProgramCommand}" Margin="4,0"
-                        ToolTip="Iniciar programa">
+                        ToolTip="Iniciar programa (requer ligação à máquina)">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Image Style="{StaticResource AxiomUiIconCompact}"/>
                         <TextBlock Text="Iniciar" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Width="118" Margin="4,0"
+                        Command="{Binding ToggleSimulationCommand}"
+                        ToolTip="Percorre as linhas e o percurso 3D sem enviar comandos à máquina. Clicar de novo interrompe.">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource SmallButton}">
+                            <Setter Property="Padding" Value="6,4"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSimulating}" Value="True">
+                                    <Setter Property="Background" Value="#45475a"/>
+                                    <Setter Property="BorderBrush" Value="#f9e2af"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock VerticalAlignment="Center" Margin="6,0,0,0" FontWeight="SemiBold" Foreground="#cdd6f4">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Simular"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSimulating}" Value="True">
+                                            <Setter Property="Text" Value="Parar sim."/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </Button>
                 <Button Width="100" Style="{StaticResource HoldButton}"

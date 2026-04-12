@@ -24,9 +24,10 @@ public partial class MainWindow : Window
         TryLoadWindowIcon();
 
         // Ligar eventos do ViewModel que precisam de acção na View
-        _vm.ProgramLoaded          += OnProgramLoaded;
-        _vm.LineHighlightRequested += OnLineHighlight;
-        _vm.PropertyChanged        += OnVmPropertyChanged;
+        _vm.ProgramLoaded            += OnProgramLoaded;
+        _vm.LineHighlightRequested   += OnLineHighlight;
+        _vm.SimulationPoseRequested += OnSimulationPose;
+        _vm.PropertyChanged          += OnVmPropertyChanged;
     }
 
     /// <summary>Ícone fora do XAML: evita falhas do conversor pack:// com recursos embutidos.</summary>
@@ -76,7 +77,13 @@ public partial class MainWindow : Window
     private void OnLineHighlight(object? _, int idx)
     {
         GcodePanel.HighlightLine(idx);
-        VizPanel.HighlightLine(idx);
+        VizPanel.HighlightLine(idx, _vm.IsSimulating);
+    }
+
+    private void OnSimulationPose(object? _, SimulationPoseEventArgs e)
+    {
+        GcodePanel.HighlightLine(e.ActiveSourceLineIndex);
+        VizPanel.UpdateSimulationPose(e.TipWorld, e.SegmentStartWorld, e.ADeg, e.Cutting);
     }
 
     private void OnVmPropertyChanged(object? _, System.ComponentModel.PropertyChangedEventArgs e)
@@ -85,6 +92,10 @@ public partial class MainWindow : Window
         {
             TbConnStatus.Text = _vm.IsConnected ? "Ligado"    : "Desligado";
             TbPort.Text       = _vm.IsConnected ? _vm.SelectedPort : "";
+        }
+        else if (e.PropertyName == nameof(MainViewModel.IsSimulating) && !_vm.IsSimulating)
+        {
+            VizPanel.HideLaserNozzle();
         }
     }
 

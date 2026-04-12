@@ -73,6 +73,7 @@ public partial class SettingsDialog : Window
         TbJogFeed.Text    = _s.GetDouble("jog_feed",     500.0).ToString("F0", CultureInfo.InvariantCulture);
         SldWatermarkOpacity.Value = Math.Clamp(
             _s.GetDouble("viewport_watermark_opacity", 0.09) * 100.0, 0, 100);
+        SldSimulationSpeed.Value = Math.Clamp(_s.GetDouble("simulation_speed_percent", 100.0), 10, 400);
     }
 
     public void SaveToSettings(SettingsManager s)
@@ -122,6 +123,7 @@ public partial class SettingsDialog : Window
         if (double.TryParse(TbStandoff.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var st)) s.Set("standoff", st);
         if (double.TryParse(TbJogFeed.Text,  NumberStyles.Any, CultureInfo.InvariantCulture, out var jf)) s.Set("jog_feed", jf);
         s.Set("viewport_watermark_opacity", SldWatermarkOpacity.Value / 100.0);
+        s.Set("simulation_speed_percent", SldSimulationSpeed.Value);
     }
 
     // ── Presets ───────────────────────────────────────────────────────────

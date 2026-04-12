@@ -13,6 +13,8 @@ public record ToolpathMove(
 public class GCodeProgram
 {
     public string              Filepath  { get; set; } = "";
+    /// <summary>Linhas lidas do ficheiro (antes do pré-processamento por tipo de máquina).</summary>
+    public List<string>?       SourceLines { get; set; }
     public List<string>        Lines     { get; set; } = [];
     public List<ToolpathMove>  Toolpath  { get; set; } = [];
     public AxisBounds          Bounds    { get; set; } = new();

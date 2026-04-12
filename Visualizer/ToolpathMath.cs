@@ -16,4 +16,18 @@ public static class ToolpathMath
                            zMachine * Math.Sin(aRad),
                            zMachine * Math.Cos(aRad));
     }
+
+    /// <summary>Direcção +Z máquina (radial para fora do eixo do tubo) no referencial mundo, só em função de A.</summary>
+    public static Vector3D MachineZOutwardWorld(double aDeg)
+    {
+        double aRad = aDeg * Math.PI / 180.0;
+        return new Vector3D(0, Math.Sin(aRad), Math.Cos(aRad));
+    }
+
+    /// <summary>Direcção do feixe para o material: -Z máquina (para o eixo do tubo), no plano radial.</summary>
+    public static Vector3D BeamInwardFromAxisWorld(double aDeg)
+    {
+        var o = MachineZOutwardWorld(aDeg);
+        return new Vector3D(-o.X, -o.Y, -o.Z);
+    }
 }

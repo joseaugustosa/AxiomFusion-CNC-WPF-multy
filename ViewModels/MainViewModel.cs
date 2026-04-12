@@ -1,11 +1,23 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Media.Media3D;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxiomFusion.CncController.Comm;
 using AxiomFusion.CncController.Core;
+using AxiomFusion.CncController.Visualizer;
 
 namespace AxiomFusion.CncController.ViewModels;
+
+/// <summary>Dados para animar o bico ao longo do percurso (interpolação entre pontos do toolpath).</summary>
+public sealed record SimulationPoseEventArgs(
+    Point3D TipWorld,
+    Point3D SegmentStartWorld,
+    double  ADeg,
+    int     ActiveSourceLineIndex,
+    bool    Cutting,
+    double  PathProgress01);
 
 public partial class MainViewModel : ObservableObject
 {
@@ -41,6 +53,25 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private int     _currentLine;
     [ObservableProperty] private int     _totalLines;
     [ObservableProperty] private double  _progress;
+    /// <summary>Reprodução local do programa (lista + 3D) sem enviar à máquina.</summary>
+    [ObservableProperty] private bool    _isSimulating;
+
+    /// <summary>Percentagem de velocidade da simulação (definições e binding opcional na UI).</summary>
+    [ObservableProperty] private double  _simulationSpeedPercent = 100;
+
+    public event EventHandler<SimulationPoseEventArgs>? SimulationPoseRequested;
+
+    private DispatcherTimer? _simTimer;
+    private List<SimSegment>? _simSegments;
+    private double            _simTotalLengthMm;
+    private int               _simSegI;
+    private double            _simU;
+    private DateTime          _simLastUtc;
+
+    private const double SimRapidFeedMmMin = 12000;
+    private const double SimMinFeedMmMin   = 80;
+
+    private sealed record SimSegment(ToolpathMove Prev, ToolpathMove Curr, Point3D P0, Point3D P1, double LengthMm);
 
     // ── MDI ───────────────────────────────────────────────────────────────
     [ObservableProperty] private string  _mdiInput         = "";
@@ -111,6 +142,30 @@ public partial class MainViewModel : ObservableObject
         // Restaurar tipo de máquina guardado
         var saved = _settings.GetMachineType();
         ApplyMachineType(saved, notify: false);
+        RefreshSimulationSettings();
+    }
+
+    private void RefreshSimulationSettings()
+    {
+        SimulationSpeedPercent = Math.Clamp(_settings.GetDouble("simulation_speed_percent", 100.0), 10, 400);
+    }
+
+    partial void OnIsSimulatingChanged(bool value)
+        => ToggleSimulationCommand.NotifyCanExecuteChanged();
+
+    partial void OnTotalLinesChanged(int value)
+        => ToggleSimulationCommand.NotifyCanExecuteChanged();
+
+    partial void OnSimulationSpeedPercentChanged(double value)
+    {
+        try
+        {
+            _settings.Set("simulation_speed_percent", Math.Clamp(value, 10, 400));
+        }
+        catch
+        {
+            /* ignorar falha ao gravar */
+        }
     }
 
     // ── Comandos de ligação / máquina ─────────────────────────────────────
@@ -155,6 +210,7 @@ public partial class MainViewModel : ObservableObject
     private void StartProgram()
     {
         if (LoadedProgram is null || !IsConnected) return;
+        StopSimulationPlayback();
         _ctrl.StartProgram(LoadedProgram);
     }
 
@@ -162,7 +218,232 @@ public partial class MainViewModel : ObservableObject
     private void FeedHold() => _ctrl.FeedHold();
 
     [RelayCommand]
-    private void AbortProgram() => _ctrl.AbortProgram();
+    private void AbortProgram()
+    {
+        StopSimulationPlayback();
+        _ctrl.AbortProgram();
+    }
+
+    /// <summary>Inicia ou interrompe a simulação visual (sem ligação à máquina).</summary>
+    [RelayCommand(CanExecute = nameof(CanToggleSimulation))]
+    private void ToggleSimulation()
+    {
+        if (IsSimulating)
+        {
+            StopSimulationPlayback();
+            StatusMessage = "Simulação interrompida.";
+            return;
+        }
+
+        if (LoadedProgram?.Toolpath is not { Count: >= 2 } moves) return;
+
+        _simSegments = BuildSimulationSegments(moves);
+        if (_simSegments.Count == 0) return;
+
+        _simTotalLengthMm = _simSegments.Sum(s => s.LengthMm);
+        if (_simTotalLengthMm < 1e-6)
+        {
+            _simSegments = null;
+            return;
+        }
+
+        IsSimulating = true;
+        _simSegI = 0;
+        _simU    = 0;
+        _simLastUtc = DateTime.UtcNow;
+
+        var disp = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+        _simTimer = new DispatcherTimer(DispatcherPriority.Normal, disp)
+        {
+            Interval = TimeSpan.FromMilliseconds(16),
+        };
+        _simTimer.Tick += OnSimulationTick;
+        _simTimer.Start();
+
+        StatusMessage = "A simular (interpolação ao longo do percurso — não envia à máquina)…";
+        EmitSimulationPose();
+    }
+
+    private bool CanToggleSimulation()
+        => (LoadedProgram is not null && TotalLines > 0 && LoadedProgram.Toolpath.Count >= 2) || IsSimulating;
+
+    private static List<SimSegment> BuildSimulationSegments(IReadOnlyList<ToolpathMove> moves)
+    {
+        var list = new List<SimSegment>();
+        for (int i = 1; i < moves.Count; i++)
+        {
+            var prev = moves[i - 1];
+            var curr = moves[i];
+            var p0 = ToolpathMath.ToWorld(prev.X, prev.A, prev.Z);
+            var p1 = ToolpathMath.ToWorld(curr.X, curr.A, curr.Z);
+            var len = (p1 - p0).Length;
+            list.Add(new SimSegment(prev, curr, p0, p1, len));
+        }
+
+        return list;
+    }
+
+    private void OnSimulationTick(object? sender, EventArgs e)
+    {
+        if (LoadedProgram is null || _simSegments is null || _simSegments.Count == 0)
+        {
+            StopSimulationPlayback();
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        double dtMs = (now - _simLastUtc).TotalMilliseconds;
+        _simLastUtc = now;
+        if (dtMs <= 0) dtMs = 16;
+        if (dtMs > 200) dtMs = 200;
+
+        double speedMul = Math.Clamp(SimulationSpeedPercent, 10, 400) / 100.0;
+        double timeLeftMs = dtMs;
+
+        while (timeLeftMs > 1e-9)
+        {
+            if (_simSegI >= _simSegments.Count)
+            {
+                Progress    = 100;
+                CurrentLine = TotalLines;
+                EmitSimulationPose();
+                StopSimulationPlayback();
+                StatusMessage = "Simulação concluída.";
+                ToggleSimulationCommand.NotifyCanExecuteChanged();
+                return;
+            }
+
+            var seg = _simSegments[_simSegI];
+            double len = seg.LengthMm;
+            if (len < 1e-9)
+            {
+                _simSegI++;
+                _simU = 0;
+                continue;
+            }
+
+            double feedMmMin = seg.Curr.IsRapid
+                ? SimRapidFeedMmMin
+                : Math.Max(seg.Curr.Feed, SimMinFeedMmMin);
+            feedMmMin *= speedMul;
+            double mmPerMs = feedMmMin / 60000.0;
+            if (mmPerMs < 1e-12)
+            {
+                _simSegI++;
+                _simU = 0;
+                continue;
+            }
+
+            double remainMm = (1.0 - _simU) * len;
+            if (remainMm <= 1e-9)
+            {
+                _simSegI++;
+                _simU = 0;
+                continue;
+            }
+
+            double timeToExitSeg = remainMm / mmPerMs;
+            if (timeToExitSeg <= timeLeftMs)
+            {
+                timeLeftMs -= timeToExitSeg;
+                _simSegI++;
+                _simU = 0;
+            }
+            else
+            {
+                double distMm = timeLeftMs * mmPerMs;
+                _simU += distMm / len;
+                timeLeftMs = 0;
+            }
+        }
+
+        if (_simSegI >= _simSegments.Count)
+        {
+            Progress    = 100;
+            CurrentLine = TotalLines;
+            EmitSimulationPose();
+            StopSimulationPlayback();
+            StatusMessage = "Simulação concluída.";
+            ToggleSimulationCommand.NotifyCanExecuteChanged();
+            return;
+        }
+
+        EmitSimulationPose();
+    }
+
+    private void EmitSimulationPose()
+    {
+        if (_simSegments is null || _simSegments.Count == 0 || LoadedProgram is null) return;
+
+        if (_simSegI >= _simSegments.Count)
+        {
+            var last = _simSegments[^1];
+            var tipEnd = last.P1;
+            var aEnd   = last.Curr.A;
+            UpdateProgressFromState();
+            SimulationPoseRequested?.Invoke(this, new SimulationPoseEventArgs(
+                tipEnd, last.P0, aEnd, last.Curr.LineIndex,
+                last.Curr.LaserOn && !last.Curr.IsRapid, 1.0));
+            return;
+        }
+
+        var s = _simSegments[_simSegI];
+        double u = Math.Clamp(_simU, 0, 1);
+        double x = s.Prev.X + (s.Curr.X - s.Prev.X) * u;
+        double z = s.Prev.Z + (s.Curr.Z - s.Prev.Z) * u;
+        double aDeg = s.Prev.A + (s.Curr.A - s.Prev.A) * u;
+        var tipWorld = ToolpathMath.ToWorld(x, aDeg, z);
+
+        UpdateProgressFromState();
+
+        bool cutting = s.Curr.LaserOn && !s.Curr.IsRapid;
+        double p01   = ComputePathProgress01();
+
+        SimulationPoseRequested?.Invoke(this, new SimulationPoseEventArgs(
+            tipWorld, s.P0, aDeg, s.Curr.LineIndex, cutting, p01));
+    }
+
+    private void UpdateProgressFromState()
+    {
+        if (_simSegments is null || _simTotalLengthMm < 1e-9) return;
+
+        double acc = 0;
+        for (int i = 0; i < _simSegI && i < _simSegments.Count; i++)
+            acc += _simSegments[i].LengthMm;
+        if (_simSegI < _simSegments.Count)
+            acc += _simU * _simSegments[_simSegI].LengthMm;
+
+        Progress = Math.Clamp(acc / _simTotalLengthMm * 100.0, 0, 100);
+        if (_simSegI < _simSegments.Count)
+            CurrentLine = _simSegments[_simSegI].Curr.LineIndex + 1;
+        else
+            CurrentLine = TotalLines;
+    }
+
+    private double ComputePathProgress01()
+    {
+        if (_simSegments is null || _simTotalLengthMm < 1e-9) return 0;
+        double acc = 0;
+        for (int i = 0; i < _simSegI && i < _simSegments.Count; i++)
+            acc += _simSegments[i].LengthMm;
+        if (_simSegI < _simSegments.Count)
+            acc += _simU * _simSegments[_simSegI].LengthMm;
+        return Math.Clamp(acc / _simTotalLengthMm, 0, 1);
+    }
+
+    private void StopSimulationPlayback()
+    {
+        if (_simTimer is not null)
+        {
+            _simTimer.Stop();
+            _simTimer.Tick -= OnSimulationTick;
+            _simTimer = null;
+        }
+
+        _simSegments = null;
+        if (IsSimulating)
+            IsSimulating = false;
+    }
 
     // ── MDI ───────────────────────────────────────────────────────────────
 
@@ -401,19 +682,61 @@ public partial class MainViewModel : ObservableObject
         _settings.SetMachineType(mt);
         _ctrl.UpdateMCodes(CodesForController());
 
+        if (LoadedProgram?.SourceLines is { Count: > 0 })
+        {
+            StopSimulationPlayback();
+            RebuildProgramToolpath(LoadedProgram);
+            ToggleSimulationCommand.NotifyCanExecuteChanged();
+            ProgramLoaded?.Invoke(this, LoadedProgram);
+        }
+
         if (notify)
             StatusMessage = $"Modo máquina: {MachineName}";
     }
 
     // ── Programa carregado ────────────────────────────────────────────────
 
-    public void OnProgramLoaded(GCodeProgram program)
+    /// <summary>Pré-processa linhas, reconstrói percurso 3D e limites para simulação (laser/plasma 2D ou torno).</summary>
+    private void RebuildProgramToolpath(GCodeProgram program)
     {
+        if (program.SourceLines is null || program.SourceLines.Count == 0)
+            program.SourceLines = program.Lines.ToList();
+
+        var src = program.SourceLines;
         var torchCodes   = TorchCodesForProgram();
         var spindleCodes = _settings.BuildSpindleCodes();
         program.Lines = GCodePreprocessor.PreprocessForMachine(
-            program.Lines, CurrentMachine, torchCodes, spindleCodes);
+            src.ToList(), CurrentMachine, torchCodes, spindleCodes);
         program.LineCount = program.Lines.Count;
+
+        var (torchOn, torchOff) = TorchMNumbersForSimulation();
+        program.Toolpath = GCodeParser.BuildToolpath(
+            program.Lines, CurrentMachine, torchOn, torchOff);
+        program.Bounds = GCodeParser.ComputeBounds(program.Toolpath);
+    }
+
+    private (int on, int off) TorchMNumbersForSimulation()
+    {
+        var tc = TorchCodesForProgram();
+        int defOn  = GCodeParser.TryParseMCodeNumber(tc.On,  out var o) ? o : 3;
+        int defOff = GCodeParser.TryParseMCodeNumber(tc.Off, out var c) ? c : 5;
+
+        return CurrentMachine switch
+        {
+            MachineType.TurnLaser => (
+                GCodeParser.TryParseMCodeNumber(_settings.GetString("turn_laser_on", "M7"), out var a) ? a : 7,
+                GCodeParser.TryParseMCodeNumber(_settings.GetString("turn_laser_off", "M107"), out var b) ? b : 107),
+            MachineType.TurnPlasma => (
+                GCodeParser.TryParseMCodeNumber(_settings.GetString("turn_plasma_on", "M7"), out var a2) ? a2 : 7,
+                GCodeParser.TryParseMCodeNumber(_settings.GetString("turn_plasma_off", "M107"), out var b2) ? b2 : 107),
+            _ => (defOn, defOff),
+        };
+    }
+
+    public void OnProgramLoaded(GCodeProgram program)
+    {
+        StopSimulationPlayback();
+        RebuildProgramToolpath(program);
 
         var linesToCheck = program.Lines.Count > 500
             ? program.Lines[..500] : program.Lines;
@@ -429,6 +752,7 @@ public partial class MainViewModel : ObservableObject
         TotalLines    = program.LineCount;
         CurrentLine   = 0;
         Progress      = 0;
+        ToggleSimulationCommand.NotifyCanExecuteChanged();
         ProgramLoaded?.Invoke(this, program);
     }
 
@@ -450,6 +774,7 @@ public partial class MainViewModel : ObservableObject
 
         var mt = _settings.GetMachineType();
         ApplyMachineType(mt, notify: false);
+        RefreshSimulationSettings();
 
         if (wasConnected)
             try { _ctrl.Connect(port, baud); } catch { }

@@ -71,6 +71,24 @@
                     <TextBlock Text="Iniciar" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
                 </StackPanel>
             </Button>
+            <Button Style="{StaticResource ToolbarButton}" Command="{Binding ToggleSimulationCommand}" Margin="2"
+                    ToolTip="Simular programa (só visualização — sem enviar à máquina)">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Simular"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSimulating}" Value="True">
+                                        <Setter Property="Text" Value="Parar sim."/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Button>
             <Button Style="{StaticResource HoldButton}" Command="{Binding FeedHoldCommand}" Margin="2"
                     ToolTip="Feed hold — pausa o avanço">
                 <StackPanel Orientation="Horizontal">

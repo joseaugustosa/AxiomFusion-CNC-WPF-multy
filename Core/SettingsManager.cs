@@ -68,6 +68,10 @@ public class SettingsManager
         ["tube_W"]            = 50.0,
         ["tube_H"]            = 50.0,
         ["standoff"]          = 3.0,
+        // Logo 3D: graus/segundo (0 = parado)
+        ["logo_spin_deg_per_sec"] = 36.0,
+        // Marca de água 2D no viewport (0–1)
+        ["viewport_watermark_opacity"] = 0.09,
 
         // Janela
         ["window_width"]      = 1400,

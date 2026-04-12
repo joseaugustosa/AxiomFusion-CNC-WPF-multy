@@ -18,10 +18,22 @@
             <!-- ── Controlo do spindle ─────────────────────────────────── -->
             <Label Content="Spindle:" Style="{StaticResource SmallLabel}" Margin="4,6,4,0"/>
             <UniformGrid Rows="1" Columns="2" Margin="4,2">
-                <Button Content="M3  ▶  Frente" Style="{StaticResource SmallButton}" Margin="2"
-                        Command="{Binding SpindleOnCommand}"/>
-                <Button Content="M5  ■  Stop"   Style="{StaticResource AbortButton}"  Margin="2"
-                        Command="{Binding SpindleOffCommand}"/>
+                <Button Style="{StaticResource SmallButton}" Margin="2"
+                        Command="{Binding SpindleOnCommand}"
+                        ToolTip="Spindle sentido normal (M3)">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="M3  Frente" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource AbortButton}" Margin="2"
+                        Command="{Binding SpindleOffCommand}"
+                        ToolTip="Spindle parado (M5)">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="M5  Stop" Foreground="White" VerticalAlignment="Center" FontWeight="Bold" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </UniformGrid>
 
             <Separator Style="{StaticResource DarkSeparator}" Margin="4,6"/>

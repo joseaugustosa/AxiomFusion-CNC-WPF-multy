@@ -17,17 +17,37 @@
                          Text="{Binding SpindleRpm, StringFormat={}{0:F0}}"
                          LostFocus="TbRpm_LostFocus"/>
                 <Label Content="RPM" Style="{StaticResource SmallLabel}"/>
-                <Button Content="S" Style="{StaticResource SmallButton}" Margin="2,0"
-                        Command="{Binding ApplySpindleRpmCommand}" ToolTip="Enviar RPM"/>
+                <Button Style="{StaticResource SmallButton}" Margin="2,0"
+                        Command="{Binding ApplySpindleRpmCommand}" ToolTip="Enviar RPM (comando S)">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center"/>
+                        <TextBlock Text="S" FontWeight="Bold" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <UniformGrid Rows="1" Columns="3" Margin="4,2">
-                <Button Content="M3 ▶" Style="{StaticResource SmallButton}" Margin="2"
-                        Command="{Binding SpindleOnCommand}"/>
-                <Button Content="M4 ◀" Style="{StaticResource SmallButton}" Margin="2"
-                        Command="{Binding SpindleReverseCommand}"/>
-                <Button Content="M5 ■" Style="{StaticResource AbortButton}"  Margin="2"
-                        Command="{Binding SpindleOffCommand}"/>
+                <Button Style="{StaticResource SmallButton}" Margin="2"
+                        Command="{Binding SpindleOnCommand}" ToolTip="M3 — sentido normal">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="M3" VerticalAlignment="Center" Margin="4,0,0,0" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SmallButton}" Margin="2"
+                        Command="{Binding SpindleReverseCommand}" ToolTip="M4 — inversão">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="M4" VerticalAlignment="Center" Margin="4,0,0,0" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource AbortButton}" Margin="2"
+                        Command="{Binding SpindleOffCommand}" ToolTip="M5 — parar spindle">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="M5" Foreground="White" VerticalAlignment="Center" FontWeight="Bold" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </UniformGrid>
 
             <CheckBox Content="Modo Diâmetro G7" Foreground="#cdd6f4" Margin="4,4"

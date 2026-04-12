@@ -253,7 +253,37 @@
                 </StackPanel>
             </TabItem>
 
-            <!-- ── Tab 4: Tubo / Máquina ─────────────────────────────── -->
+            <!-- ── Tab: Visualização ─────────────────────────────────── -->
+            <TabItem Header="Visualização">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+                        <TextBlock Foreground="#6c7086" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   Text="Opções do painel 3D (viewport): marca de água e aparência."/>
+
+                        <GroupBox Header="Marca de água" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <StackPanel Margin="4">
+                                <TextBlock Foreground="#6c7086" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                           Text="Opacidade do logo centrado por cima do percurso 3D. 0% = invisível."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="SldWatermarkOpacity" Grid.Column="0"
+                                            Minimum="0" Maximum="100" TickFrequency="1"
+                                            IsSnapToTickEnabled="True"
+                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" MinWidth="40"
+                                               Foreground="#cdd6f4" FontSize="12"
+                                               Text="{Binding Value, ElementName=SldWatermarkOpacity, StringFormat={}{0:F0}%}"/>
+                                </Grid>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ── Tab: Tubo / Máquina ───────────────────────────────── -->
             <TabItem Header="Tubo / Máquina">
                 <StackPanel Margin="8">
                     <GroupBox Header="Dimensões do Tubo" Style="{StaticResource DarkGroupBox}" Margin="0,4">

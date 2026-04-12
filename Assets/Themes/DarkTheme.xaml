@@ -93,6 +93,45 @@
         <Setter Property="Margin"      Value="4,2"/>
     </Style>
 
+    <!-- ── Ícone da marca (PNG) nos botões ───────────────────────────────── -->
+    <BitmapImage x:Key="AxiomLogoIconSource"
+                 UriSource="pack://application:,,,/AxiomFusion.CncController;component/Assets/Icons/axiom-logo.png"
+                 DecodePixelWidth="64" DecodePixelHeight="64"
+                 CacheOption="OnLoad"/>
+    <Style x:Key="AxiomUiIconBeforeLabel" TargetType="Image">
+        <Setter Property="Source" Value="{StaticResource AxiomLogoIconSource}"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant"/>
+    </Style>
+    <Style x:Key="AxiomUiIconCompact" TargetType="Image">
+        <Setter Property="Source" Value="{StaticResource AxiomLogoIconSource}"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,4,0"/>
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant"/>
+    </Style>
+    <Style x:Key="AxiomUiIconSolo" TargetType="Image">
+        <Setter Property="Source" Value="{StaticResource AxiomLogoIconSource}"/>
+        <Setter Property="Width" Value="15"/>
+        <Setter Property="Height" Value="15"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant"/>
+    </Style>
+    <Style x:Key="AxiomUiIconJog" TargetType="Image">
+        <Setter Property="Source" Value="{StaticResource AxiomLogoIconSource}"/>
+        <Setter Property="Width" Value="12"/>
+        <Setter Property="Height" Value="12"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant"/>
+    </Style>
+
     <!-- ── Buttons ──────────────────────────────────────────────────────── -->
     <Style x:Key="BaseButton" TargetType="Button">
         <Setter Property="Foreground"        Value="{StaticResource FgText}"/>

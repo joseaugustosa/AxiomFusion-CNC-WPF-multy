@@ -31,9 +31,11 @@
             <ComboBox x:Name="CmbPort" Width="100" Style="{StaticResource DarkCombo}"
                       ItemsSource="{Binding AvailablePorts}"
                       SelectedItem="{Binding SelectedPort}"/>
-            <Button Content="↻" Width="28" Style="{StaticResource SmallButton}"
-                    ToolTip="Actualizar portas"
-                    Command="{Binding RefreshPortsCommand}"/>
+            <Button Width="32" Padding="4,2" Style="{StaticResource SmallButton}"
+                    ToolTip="Actualizar lista de portas COM"
+                    Command="{Binding RefreshPortsCommand}">
+                <Image Style="{StaticResource AxiomUiIconSolo}"/>
+            </Button>
             <ToggleButton x:Name="BtnConnect"
                           Content="{Binding ConnectLabel}"
                           IsChecked="{Binding IsConnected}"
@@ -45,24 +47,54 @@
             <Separator/>
 
             <!-- Máquina -->
-            <Button Content="Home"        Style="{StaticResource ToolbarButton}"
-                    Command="{Binding HomeCommand}"/>
-            <Button Content="Desbloquear" Style="{StaticResource ToolbarButton}"
-                    Command="{Binding UnlockCommand}"/>
+            <Button Style="{StaticResource ToolbarButton}" Command="{Binding HomeCommand}"
+                    ToolTip="Home ($H)">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock Text="Home" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource ToolbarButton}" Command="{Binding UnlockCommand}"
+                    ToolTip="Desbloquear alarme ($X)">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock Text="Desbloquear" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
             <Separator/>
 
             <!-- Ciclo -->
-            <Button Content="▶  Iniciar" Style="{StaticResource StartButton}"
-                    Command="{Binding StartProgramCommand}" Margin="2"/>
-            <Button Content="⏸  Parar"  Style="{StaticResource HoldButton}"
-                    Command="{Binding FeedHoldCommand}"     Margin="2"/>
-            <Button Content="■  Abortar" Style="{StaticResource AbortButton}"
-                    Command="{Binding AbortProgramCommand}" Margin="2"/>
+            <Button Style="{StaticResource StartButton}" Command="{Binding StartProgramCommand}" Margin="2"
+                    ToolTip="Iniciar programa (ciclo)">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock Text="Iniciar" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource HoldButton}" Command="{Binding FeedHoldCommand}" Margin="2"
+                    ToolTip="Feed hold — pausa o avanço">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock Text="Parar" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource AbortButton}" Command="{Binding AbortProgramCommand}" Margin="2"
+                    ToolTip="Abortar / reset do programa">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock Text="Abortar" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
             <Separator/>
 
             <!-- Configuração -->
-            <Button Content="⚙ Configuração" Style="{StaticResource ToolbarButton}"
-                    Click="BtnSettings_Click"/>
+            <Button Style="{StaticResource ToolbarButton}" Click="BtnSettings_Click"
+                    ToolTip="Configuração da máquina e ligação">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconBeforeLabel}"/>
+                    <TextBlock Text="Configuração" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </ToolBar>
 
         <!-- ── Status Bar ──────────────────────────────────────────────── -->
@@ -80,7 +112,7 @@
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{Binding CurrentLine, StringFormat=Linha {0}}"
+                    <TextBlock Text="{Binding CurrentLine, StringFormat='Linha {0}'}"
                                Foreground="#6c7086"/>
                     <TextBlock Text="{Binding TotalLines, StringFormat=' / {0}'}"
                                Foreground="#6c7086"/>

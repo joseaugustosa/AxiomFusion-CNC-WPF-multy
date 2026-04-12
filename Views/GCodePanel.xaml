@@ -5,9 +5,15 @@
         <DockPanel>
             <!-- Toolbar -->
             <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
-                <Button DockPanel.Dock="Right" Content="Abrir…" Width="70"
+                <Button DockPanel.Dock="Right" Width="88" Padding="6,3"
                         Style="{StaticResource SmallButton}"
-                        Click="BtnLoad_Click" Margin="4,0,0,0"/>
+                        Click="BtnLoad_Click" Margin="4,0,0,0"
+                        ToolTip="Carregar ficheiro G-code">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="Abrir…" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Button>
                 <TextBlock x:Name="TbFilename" Text="(nenhum ficheiro)" Foreground="#6c7086"
                            VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"/>
             </DockPanel>
@@ -23,12 +29,30 @@
             <!-- Botões de controlo -->
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
                         Margin="0,4" HorizontalAlignment="Center">
-                <Button Content="▶ Iniciar" Width="90" Style="{StaticResource StartButton}"
-                        Command="{Binding StartProgramCommand}" Margin="4,0"/>
-                <Button Content="⏸ Parar"  Width="90" Style="{StaticResource HoldButton}"
-                        Command="{Binding FeedHoldCommand}"      Margin="4,0"/>
-                <Button Content="■ Abortar" Width="90" Style="{StaticResource AbortButton}"
-                        Command="{Binding AbortProgramCommand}"  Margin="4,0"/>
+                <Button Width="100" Style="{StaticResource StartButton}"
+                        Command="{Binding StartProgramCommand}" Margin="4,0"
+                        ToolTip="Iniciar programa">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="Iniciar" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Width="100" Style="{StaticResource HoldButton}"
+                        Command="{Binding FeedHoldCommand}" Margin="4,0"
+                        ToolTip="Feed hold">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="Parar" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Width="100" Style="{StaticResource AbortButton}"
+                        Command="{Binding AbortProgramCommand}" Margin="4,0"
+                        ToolTip="Abortar programa">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconCompact}"/>
+                        <TextBlock Text="Abortar" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <!-- Lista de linhas -->

@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -23,12 +24,28 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Handler global de excepções não tratadas
         DispatcherUnhandledException += (_, ex) =>
         {
-            MessageBox.Show(ex.Exception.Message, "Erro Inesperado",
+            var inner = ex.Exception.InnerException;
+            var text  = inner is not null
+                ? $"{ex.Exception.Message}\n\nDetalhe: {inner.Message}"
+                : ex.Exception.Message;
+            MessageBox.Show(text, "Erro Inesperado",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             ex.Handled = true;
         };
+
+        try
+        {
+            var main = new MainWindow();
+            MainWindow = main;
+            main.Show();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.ToString(), "Erro ao abrir a janela principal",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+        }
     }
 }

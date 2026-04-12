@@ -12,15 +12,46 @@
                     <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Row="0" Grid.Column="1" Content="Y+" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Y:1"/>
-                <Button Grid.Row="1" Grid.Column="0" Content="X-" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="X:-1"/>
-                <Button Grid.Row="1" Grid.Column="1" Content="·" Style="{StaticResource JogCenterButton}"/>
-                <Button Grid.Row="1" Grid.Column="2" Content="X+" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="X:1"/>
-                <Button Grid.Row="2" Grid.Column="1" Content="Y-" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Y:-1"/>
+                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Y:1"
+                        ToolTip="Jog eixo Y+">
+                    <StackPanel>
+                        <Image Style="{StaticResource AxiomUiIconJog}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Y+" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,-2,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="X:-1"
+                        ToolTip="Jog eixo X−">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center"/>
+                        <TextBlock Text="X−" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource JogCenterButton}"
+                        ToolTip="Referência cruzada (inactivo)">
+                    <Image Width="22" Height="22" Stretch="Uniform"
+                           Source="{StaticResource AxiomLogoIconSource}"
+                           Opacity="0.35"
+                           RenderOptions.BitmapScalingMode="Fant"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Button>
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="X:1"
+                        ToolTip="Jog eixo X+">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="X+" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Y:-1"
+                        ToolTip="Jog eixo Y−">
+                    <StackPanel>
+                        <TextBlock Text="Y−" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <Image Style="{StaticResource AxiomUiIconJog}" HorizontalAlignment="Center" Margin="0,-2,0,0"/>
+                    </StackPanel>
+                </Button>
             </Grid>
 
             <!-- Z / A -->
@@ -28,14 +59,32 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="Z+" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Z:1"/>
-                <Button Grid.Column="1" Content="Z-" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Z:-1"/>
-                <Button Grid.Column="2" Content="A+" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="A:1"/>
-                <Button Grid.Column="3" Content="A-" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="A:-1"/>
+                <Button Grid.Column="0" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Z:1"
+                        ToolTip="Jog eixo Z+">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center"/>
+                        <TextBlock Text="Z+" FontWeight="Bold" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="1" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Z:-1"
+                        ToolTip="Jog eixo Z−">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Z−" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="A:1"
+                        ToolTip="Jog eixo A+ (rotação)">
+                    <TextBlock Text="A+" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                </Button>
+                <Button Grid.Column="3" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="A:-1"
+                        ToolTip="Jog eixo A− (rotação)">
+                    <TextBlock Text="A−" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                </Button>
             </Grid>
 
             <Separator Style="{StaticResource DarkSeparator}" Margin="2,4"/>

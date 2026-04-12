@@ -9,12 +9,34 @@
     <AssemblyName>AxiomFusion.CncController</AssemblyName>
     <RootNamespace>AxiomFusion.CncController</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon>Assets\Icons\app-light.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="HelixToolkit.WPF" Version="3.1.2" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Icons\app.ico" />
+    <Resource Include="Assets\Icons\app-light.ico" />
+    <Resource Include="Assets\Icons\app.png" />
+    <Resource Include="Assets\Icons\axiom-logo.png" />
+    <Resource Include="Assets\Icons\axiom-logo-lightbg.png" />
+    <None Include="Assets\Icons\axiom-logo.png" Link="Assets\Icons\axiom-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Icons\axiom-logo-lightbg.png" Link="Assets\Icons\axiom-logo-lightbg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Cópia em disco para TryLoadWindowIcon (fallback) -->
+    <None Include="Assets\Icons\app.png" Link="Assets\Icons\app.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\Brand\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

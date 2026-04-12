@@ -5,74 +5,137 @@
     <DockPanel>
         <!-- Toolbar -->
         <ToolBar DockPanel.Dock="Top" Style="{StaticResource DarkToolBar}">
-            <Button Content="Ajustar Vista" Style="{StaticResource SmallButton}" Click="BtnFit_Click"/>
+            <Button Style="{StaticResource SmallButton}" Click="BtnFit_Click"
+                    ToolTip="Encaixar vista ao modelo (zoom extents)">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconCompact}" Margin="0,0,6,0"/>
+                    <TextBlock Text="Ajustar vista" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
             <Separator/>
-            <ToggleButton x:Name="BtnTube" Content="Tubo: ON" IsChecked="True"
-                          Style="{StaticResource DarkToggleButton}" Click="BtnTube_Click"/>
+            <ToggleButton x:Name="BtnTube" IsChecked="True"
+                          Style="{StaticResource DarkToggleButton}" Click="BtnTube_Click"
+                          ToolTip="Mostrar ou ocultar o tubo no 3D">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconCompact}" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="TbTubeLabel" Text="Tubo: ON" VerticalAlignment="Center"/>
+                </StackPanel>
+            </ToggleButton>
+            <ToggleButton x:Name="BtnLogo" IsChecked="True"
+                          Style="{StaticResource DarkToggleButton}" Click="BtnLogo_Click"
+                          ToolTip="Mostrar ou ocultar o logo 3D (clique no logo para velocidade)">
+                <StackPanel Orientation="Horizontal">
+                    <Image Style="{StaticResource AxiomUiIconCompact}" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="TbLogoLabel" Text="Logo 3D: ON" VerticalAlignment="Center"/>
+                </StackPanel>
+            </ToggleButton>
             <Separator/>
-            <TextBlock Text="↙ Orbit  ↕ Pan  ⊕ Zoom" Foreground="#6c7086"
-                       FontSize="11" VerticalAlignment="Center" Margin="6,0"/>
+            <TextBlock Foreground="#6c7086" FontSize="11" VerticalAlignment="Center" Margin="6,0"
+                       Text="Vista: arrastar = orbitar · Ctrl+arrastar = pan · roda do rato = zoom"/>
         </ToolBar>
 
-        <!-- Viewport 3D (HelixToolkit) -->
-        <h:HelixViewport3D x:Name="Viewport"
-                           Background="#11111b"
-                           ShowCoordinateSystem="True"
-                           ShowFrameRate="False"
-                           IsHeadLightEnabled="True"
-                           CameraRotationMode="Trackball">
+        <!-- Vista única: toolpath a toda a largura; logo 3D em sobreposição (metade da antiga coluna) -->
+        <Grid>
+            <!-- Principal: tubo + percursos (orbit sobre toda a área) -->
+            <h:HelixViewport3D x:Name="Viewport"
+                               Background="#11111b"
+                               ShowCoordinateSystem="True"
+                               CoordinateSystemHorizontalPosition="Right"
+                               CoordinateSystemVerticalPosition="Top"
+                               ShowFrameRate="False"
+                               IsHeadLightEnabled="True"
+                               CameraRotationMode="Trackball">
 
-            <!-- Iluminação -->
-            <h:HelixViewport3D.DefaultCamera>
-                <PerspectiveCamera FieldOfView="45"
-                                   Position="200,200,200"
-                                   LookDirection="-1,-1,-1"
-                                   UpDirection="0,0,1"/>
-            </h:HelixViewport3D.DefaultCamera>
+                <h:HelixViewport3D.DefaultCamera>
+                    <PerspectiveCamera FieldOfView="45"
+                                       Position="200,200,200"
+                                       LookDirection="-1,-1,-1"
+                                       UpDirection="0,0,1"/>
+                </h:HelixViewport3D.DefaultCamera>
 
-            <!-- Grelha de referência -->
-            <h:GridLinesVisual3D x:Name="Grid"
-                                 Width="200" Length="200"
-                                 MajorDistance="50" MinorDistance="10"
-                                 Thickness="0.3">
-                <h:GridLinesVisual3D.Material>
-                    <DiffuseMaterial>
-                        <DiffuseMaterial.Brush>
-                            <SolidColorBrush Color="#444466" Opacity="0.15"/>
-                        </DiffuseMaterial.Brush>
-                    </DiffuseMaterial>
-                </h:GridLinesVisual3D.Material>
-            </h:GridLinesVisual3D>
+                <h:GridLinesVisual3D x:Name="Grid"
+                                     Width="200" Length="200"
+                                     MajorDistance="50" MinorDistance="10"
+                                     Thickness="0.3">
+                    <h:GridLinesVisual3D.Material>
+                        <DiffuseMaterial>
+                            <DiffuseMaterial.Brush>
+                                <SolidColorBrush Color="#444466" Opacity="0.15"/>
+                            </DiffuseMaterial.Brush>
+                        </DiffuseMaterial>
+                    </h:GridLinesVisual3D.Material>
+                </h:GridLinesVisual3D>
 
-            <!-- Tubo (gerado no code-behind) -->
-            <h:MeshGeometryVisual3D x:Name="TubeVisual">
-                <h:MeshGeometryVisual3D.Material>
-                    <DiffuseMaterial>
-                        <DiffuseMaterial.Brush>
-                            <SolidColorBrush Color="#6688aa" Opacity="0.4"/>
-                        </DiffuseMaterial.Brush>
-                    </DiffuseMaterial>
-                </h:MeshGeometryVisual3D.Material>
-                <h:MeshGeometryVisual3D.BackMaterial>
-                    <DiffuseMaterial>
-                        <DiffuseMaterial.Brush>
-                            <SolidColorBrush Color="#446688" Opacity="0.15"/>
-                        </DiffuseMaterial.Brush>
-                    </DiffuseMaterial>
-                </h:MeshGeometryVisual3D.BackMaterial>
-            </h:MeshGeometryVisual3D>
+                <h:MeshGeometryVisual3D x:Name="TubeVisual">
+                    <h:MeshGeometryVisual3D.Material>
+                        <DiffuseMaterial>
+                            <DiffuseMaterial.Brush>
+                                <SolidColorBrush Color="#6688aa" Opacity="0.4"/>
+                            </DiffuseMaterial.Brush>
+                        </DiffuseMaterial>
+                    </h:MeshGeometryVisual3D.Material>
+                    <h:MeshGeometryVisual3D.BackMaterial>
+                        <DiffuseMaterial>
+                            <DiffuseMaterial.Brush>
+                                <SolidColorBrush Color="#446688" Opacity="0.15"/>
+                            </DiffuseMaterial.Brush>
+                        </DiffuseMaterial>
+                    </h:MeshGeometryVisual3D.BackMaterial>
+                </h:MeshGeometryVisual3D>
 
-            <!-- Toolpath — linhas coloridas -->
-            <h:LinesVisual3D x:Name="PathRapid"
-                             Color="#446677" Thickness="1"/>
-            <h:LinesVisual3D x:Name="PathTravel"
-                             Color="#4466ff" Thickness="1.5"/>
-            <h:LinesVisual3D x:Name="PathCut"
-                             Color="#ff4444" Thickness="2"/>
+                <h:LinesVisual3D x:Name="PathRapid"
+                                 Color="#446677" Thickness="1"/>
+                <h:LinesVisual3D x:Name="PathTravel"
+                                 Color="#4466ff" Thickness="1.5"/>
+                <h:LinesVisual3D x:Name="PathCut"
+                                 Color="#ff4444" Thickness="2"/>
 
-            <!-- Linha actual -->
-            <h:LinesVisual3D x:Name="PathCurrent"
-                             Color="#ffff00" Thickness="3"/>
-        </h:HelixViewport3D>
+                <h:LinesVisual3D x:Name="PathCurrent"
+                                 Color="#ffff00" Thickness="3"/>
+            </h:HelixViewport3D>
+
+            <!-- Marca de água (logo) — não interfere com orbit / pan / zoom -->
+            <Viewbox x:Name="WatermarkViewbox"
+                     Stretch="Uniform"
+                     MaxWidth="480" MaxHeight="480"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Opacity="0.09"
+                     IsHitTestVisible="False"
+                     Panel.ZIndex="0">
+                <Image Stretch="Uniform"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="pack://application:,,,/AxiomFusion.CncController;component/Assets/Icons/axiom-logo.png"/>
+            </Viewbox>
+
+            <!-- Logo: canto superior esquerdo; camada transparente captura clique para ajustar rotação -->
+            <Border x:Name="LogoOverlay"
+                    Width="174" Height="174"
+                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Margin="6" Background="Transparent"
+                    IsHitTestVisible="True"
+                    Panel.ZIndex="1">
+                <Grid>
+                    <h:HelixViewport3D x:Name="LogoViewport"
+                                       Background="Transparent"
+                                       ShowCoordinateSystem="False"
+                                       ShowViewCube="False"
+                                       ShowFrameRate="False"
+                                       IsHeadLightEnabled="True"
+                                       Loaded="LogoViewport_Loaded"
+                                       SizeChanged="LogoViewport_SizeChanged">
+                        <h:HelixViewport3D.DefaultCamera>
+                            <PerspectiveCamera FieldOfView="44"
+                                               Position="0, -95, 38"
+                                               LookDirection="0, 1, -0.15"
+                                               UpDirection="0, 0, 1"/>
+                        </h:HelixViewport3D.DefaultCamera>
+                        <ModelVisual3D x:Name="LogoModelVisual"/>
+                    </h:HelixViewport3D>
+                    <Border Background="Transparent" Cursor="Hand"
+                            ToolTip="Clique para ajustar a velocidade de rotação"
+                            MouseLeftButtonUp="LogoHitArea_MouseLeftButtonUp"/>
+                </Grid>
+            </Border>
+        </Grid>
     </DockPanel>
 </UserControl>

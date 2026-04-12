@@ -18,6 +18,79 @@
 
         <TabControl Style="{StaticResource DarkTabControl}">
 
+            <!-- ── Tab 0: Tipo de Máquina ────────────────────────────── -->
+            <TabItem Header="Tipo de Máquina">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+
+                        <GroupBox Header="Seleccionar Modo de Operação" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <StackPanel Margin="4">
+                                <RadioButton x:Name="RbLaser"     Content="Laser — corte / gravação 2D"
+                                             Foreground="#cdd6f4" Margin="4,4"
+                                             GroupName="MachineType" IsChecked="True"/>
+                                <RadioButton x:Name="RbDrill"     Content="Fresa / Furadeira CNC"
+                                             Foreground="#cdd6f4" Margin="4,4"
+                                             GroupName="MachineType"/>
+                                <RadioButton x:Name="RbTurn"      Content="Torno CNC"
+                                             Foreground="#cdd6f4" Margin="4,4"
+                                             GroupName="MachineType"/>
+                                <RadioButton x:Name="RbTurnLaser" Content="Torno + Laser combinado"
+                                             Foreground="#cdd6f4" Margin="4,4"
+                                             GroupName="MachineType"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="M Codes — Spindle (Fresa / Torno)" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <Grid Margin="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0" Content="Spindle ON fwd (M3):"  Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TbSpindleOnFwd"  Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="1" Content="Spindle ON rev (M4):"  Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TbSpindleOnRev"  Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="2" Content="Spindle OFF (M5):"     Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TbSpindleOff"    Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="3" Content="RPM máximo:"            Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TbSpindleMaxRpm" Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="4" Content="Refrigeração ON (M8):" Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TbCoolantOn"     Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="5" Content="Refrigeração OFF (M9):" Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="TbCoolantOff"    Style="{StaticResource DarkTextBox}" Margin="2"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="M Codes — Laser em modo TurnLaser" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <Grid Margin="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0" Content="Laser ON (M7):"   Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TbTurnLaserOn"  Style="{StaticResource DarkTextBox}" Margin="2"/>
+                                <Label Grid.Row="1" Content="Laser OFF (M107):" Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TbTurnLaserOff" Style="{StaticResource DarkTextBox}" Margin="2"/>
+                            </Grid>
+                        </GroupBox>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <!-- ── Tab 1: Controlador ────────────────────────────────── -->
             <TabItem Header="Controlador / M Codes">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">

@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxiomFusion.CncController.Comm;
@@ -13,7 +12,7 @@ public partial class MainViewModel : ObservableObject
     private readonly SettingsManager _settings;
     private IController _ctrl;
 
-    // ── Posições DRO ─────────────────────────────────────────────────────
+    // ── DRO ──────────────────────────────────────────────────────────────
     [ObservableProperty] private double _posX;
     [ObservableProperty] private double _posY;
     [ObservableProperty] private double _posZ;
@@ -31,7 +30,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool    _limitY;
     [ObservableProperty] private bool    _limitZ;
 
-    // ── Ligação ───────────────────────────────────────────────────────────
+    // ── Ligação ──────────────────────────────────────────────────────────
     [ObservableProperty] private string  _selectedPort     = "COM3";
     [ObservableProperty] private bool    _isConnected;
     [ObservableProperty] private string  _connectLabel     = "Ligar";
@@ -52,12 +51,38 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool    _laserTtlOn;
     [ObservableProperty] private string  _laserMode        = "PWM";
 
-    // ── Portas disponíveis ────────────────────────────────────────────────
+    // ── Spindle (Drill / Turn) ────────────────────────────────────────────
+    [ObservableProperty] private double  _spindleRpm       = 1000;
+    [ObservableProperty] private bool    _spindleRunning;
+    [ObservableProperty] private bool    _coolantOn;
+    [ObservableProperty] private bool    _diameterMode;    // torno: X = diâmetro
+    [ObservableProperty] private bool    _cssMode;         // torno: velocidade de corte constante
+    [ObservableProperty] private double  _cssSpeed         = 100.0; // m/min
+
+    // ── Tipo de máquina ───────────────────────────────────────────────────
+    [ObservableProperty] private MachineType _currentMachine = MachineType.Laser;
+    [ObservableProperty] private string      _machineName    = "Laser";
+
+    // Visibilidade dos painéis direitos
+    [ObservableProperty] private Visibility _laserPanelVisible     = Visibility.Visible;
+    [ObservableProperty] private Visibility _drillPanelVisible     = Visibility.Collapsed;
+    [ObservableProperty] private Visibility _turnPanelVisible      = Visibility.Collapsed;
+    [ObservableProperty] private Visibility _turnLaserPanelVisible = Visibility.Collapsed;
+
+    // Label dinâmico no StatusPanel ("Laser S:" vs "Spindle RPM:")
+    [ObservableProperty] private string _spindleOrLaserLabel = "Laser S:";
+
+    // Lista de nomes de máquinas para o ComboBox na toolbar
+    public ObservableCollection<string> MachineTypeNames { get; } =
+        new(Enum.GetValues<MachineType>().Select(MachineProfiles.DisplayName));
+
+    [ObservableProperty] private string _selectedMachineName = MachineProfiles.DisplayName(MachineType.Laser);
+
+    // ── Portas ────────────────────────────────────────────────────────────
     public ObservableCollection<string> AvailablePorts { get; } = [];
 
-    // ── Programa carregado ────────────────────────────────────────────────
+    // ── Programa ─────────────────────────────────────────────────────────
     public GCodeProgram? LoadedProgram { get; private set; }
-
     public event EventHandler<GCodeProgram>? ProgramLoaded;
     public event EventHandler<int>?          LineHighlightRequested;
 
@@ -69,9 +94,13 @@ public partial class MainViewModel : ObservableObject
         RefreshPorts();
         LoadMdiHistory();
         UpdateCtrlTypeLabel();
+
+        // Restaurar tipo de máquina guardado
+        var saved = _settings.GetMachineType();
+        ApplyMachineType(saved, notify: false);
     }
 
-    // ── Comandos ──────────────────────────────────────────────────────────
+    // ── Comandos de ligação / máquina ─────────────────────────────────────
 
     [RelayCommand]
     private void ToggleConnect()
@@ -107,6 +136,8 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Unlock() => _ctrl.Unlock();
 
+    // ── Programa ─────────────────────────────────────────────────────────
+
     [RelayCommand]
     private void StartProgram()
     {
@@ -120,6 +151,8 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void AbortProgram() => _ctrl.AbortProgram();
 
+    // ── MDI ───────────────────────────────────────────────────────────────
+
     [RelayCommand]
     private void SendMdi()
     {
@@ -130,6 +163,8 @@ public partial class MainViewModel : ObservableObject
         if (MdiHistory.Count > 50) MdiHistory.RemoveAt(MdiHistory.Count - 1);
         MdiInput = "";
     }
+
+    // ── Jog ───────────────────────────────────────────────────────────────
 
     [RelayCommand]
     private void JogAxis(object? param)
@@ -144,12 +179,16 @@ public partial class MainViewModel : ObservableObject
         _ctrl.Jog(axis, step, feed);
     }
 
+    // ── Overrides ────────────────────────────────────────────────────────
+
     [RelayCommand]
     private void SetFeedOverride(object? param)
     {
         int dir = param is int i ? i : 0;
         _ctrl.SetFeedOverride(dir);
     }
+
+    // ── Laser ─────────────────────────────────────────────────────────────
 
     [RelayCommand]
     private void SetLaserPwm()
@@ -161,6 +200,101 @@ public partial class MainViewModel : ObservableObject
         LaserTtlOn = !LaserTtlOn;
         _ctrl.SetLaserTtl(LaserTtlOn, _settings.GetInt("laser_max_s", 1000));
     }
+
+    // ── Spindle (Drill / Turn) ────────────────────────────────────────────
+
+    [RelayCommand]
+    private void SpindleOn()
+    {
+        SpindleRunning = true;
+        _ctrl.SendMdi($"{_settings.GetString("spindle_on_fwd","M3")} S{(int)SpindleRpm}");
+    }
+
+    [RelayCommand]
+    private void SpindleReverse()
+    {
+        SpindleRunning = true;
+        _ctrl.SendMdi($"{_settings.GetString("spindle_on_rev","M4")} S{(int)SpindleRpm}");
+    }
+
+    [RelayCommand]
+    private void SpindleOff()
+    {
+        SpindleRunning = false;
+        _ctrl.SendMdi(_settings.GetString("spindle_off", "M5"));
+    }
+
+    [RelayCommand]
+    private void ApplySpindleRpm()
+    {
+        if (!SpindleRunning) return;
+        _ctrl.SendMdi($"S{(int)SpindleRpm}");
+    }
+
+    [RelayCommand]
+    private void ToggleCoolant()
+    {
+        CoolantOn = !CoolantOn;
+        var mcode = CoolantOn
+            ? _settings.GetString("coolant_on",  "M8")
+            : _settings.GetString("coolant_off", "M9");
+        _ctrl.SendMdi(mcode);
+    }
+
+    [RelayCommand]
+    private void CoolantOnCmd()
+    {
+        CoolantOn = true;
+        _ctrl.SendMdi(_settings.GetString("coolant_on", "M8"));
+    }
+
+    [RelayCommand]
+    private void CoolantOffCmd()
+    {
+        CoolantOn = false;
+        _ctrl.SendMdi(_settings.GetString("coolant_off", "M9"));
+    }
+
+    [RelayCommand]
+    private void ToolChange(object? param)
+    {
+        int toolNum = param is string s && int.TryParse(s, out var n) ? n : 1;
+        _ctrl.SendMdi($"T{toolNum} M6");
+    }
+
+    [RelayCommand]
+    private void ToggleDiameterMode()
+    {
+        DiameterMode = !DiameterMode;
+        _ctrl.SendMdi(DiameterMode ? "G7" : "G8");
+        _settings.Set("turn_diameter_mode", DiameterMode);
+    }
+
+    [RelayCommand]
+    private void ApplyCssSpeed()
+    {
+        if (CssMode)
+            _ctrl.SendMdi($"G96 S{(int)CssSpeed}");
+        else
+            _ctrl.SendMdi($"G97 S{(int)SpindleRpm}");
+    }
+
+    // ── Laser on/off para TurnLaser ───────────────────────────────────────
+
+    [RelayCommand]
+    private void TurnLaserOn()
+    {
+        var mOn  = _settings.GetString("turn_laser_on", "M7");
+        int maxS = _settings.GetInt("laser_max_s", 1000);
+        int s    = (int)(LaserPwmPct / 100.0 * maxS);
+        _ctrl.SendMdi($"{mOn} S{s}");
+    }
+
+    [RelayCommand]
+    private void TurnLaserOff()
+        => _ctrl.SendMdi(_settings.GetString("turn_laser_off", "M107"));
+
+    // ── WCS / Zero ────────────────────────────────────────────────────────
 
     [RelayCommand]
     private void SetWcsZero(object? param)
@@ -185,12 +319,47 @@ public partial class MainViewModel : ObservableObject
     private void GotoWorkZero()
         => _ctrl.SendMdi("G0 X0 Y0 Z25 A0");
 
-    // ── Programa carregado (chamado do GCodePanel) ─────────────────────────
+    // ── Tipo de máquina ───────────────────────────────────────────────────
+
+    [RelayCommand]
+    private void ChangeMachineType(object? param)
+    {
+        if (param is not string name) return;
+        var mt = Enum.GetValues<MachineType>()
+                     .FirstOrDefault(m => MachineProfiles.DisplayName(m) == name);
+        ApplyMachineType(mt, notify: true);
+    }
+
+    partial void OnSelectedMachineNameChanged(string value)
+        => ChangeMachineType(value);
+
+    private void ApplyMachineType(MachineType mt, bool notify)
+    {
+        CurrentMachine   = mt;
+        MachineName      = MachineProfiles.DisplayName(mt);
+        SelectedMachineName = MachineName;
+
+        LaserPanelVisible     = mt == MachineType.Laser     ? Visibility.Visible : Visibility.Collapsed;
+        DrillPanelVisible     = mt == MachineType.Drill     ? Visibility.Visible : Visibility.Collapsed;
+        TurnPanelVisible      = mt == MachineType.Turn      ? Visibility.Visible : Visibility.Collapsed;
+        TurnLaserPanelVisible = mt == MachineType.TurnLaser ? Visibility.Visible : Visibility.Collapsed;
+
+        SpindleOrLaserLabel = mt == MachineType.Laser ? "Laser S:" : "Spindle:";
+
+        _settings.SetMachineType(mt);
+
+        if (notify)
+            StatusMessage = $"Modo máquina: {MachineName}";
+    }
+
+    // ── Programa carregado ────────────────────────────────────────────────
 
     public void OnProgramLoaded(GCodeProgram program)
     {
-        var codes = _settings.BuildMCodes();
-        program.Lines     = GCodePreprocessor.Preprocess(program.Lines, codes);
+        var laserCodes   = _settings.BuildMCodes();
+        var spindleCodes = _settings.BuildSpindleCodes();
+        program.Lines = GCodePreprocessor.PreprocessForMachine(
+            program.Lines, CurrentMachine, laserCodes, spindleCodes);
         program.LineCount = program.Lines.Count;
 
         var linesToCheck = program.Lines.Count > 500
@@ -199,7 +368,7 @@ public partial class MainViewModel : ObservableObject
         if (warnings.Count > 0)
         {
             string prefix = program.Lines.Count > 500
-                ? $"(Verificadas apenas as primeiras 500 linhas)\n" : "";
+                ? "(Verificadas apenas as primeiras 500 linhas)\n" : "";
             StatusMessage = prefix + string.Join("\n", warnings);
         }
 
@@ -210,7 +379,7 @@ public partial class MainViewModel : ObservableObject
         ProgramLoaded?.Invoke(this, program);
     }
 
-    // ── Configurações (recriar controlador) ───────────────────────────────
+    // ── Configurações ─────────────────────────────────────────────────────
 
     public void ApplyNewSettings()
     {
@@ -226,10 +395,11 @@ public partial class MainViewModel : ObservableObject
         ConnectControllerEvents();
         UpdateCtrlTypeLabel();
 
+        var mt = _settings.GetMachineType();
+        ApplyMachineType(mt, notify: false);
+
         if (wasConnected)
-        {
             try { _ctrl.Connect(port, baud); } catch { }
-        }
     }
 
     public void SaveSession()
@@ -297,8 +467,8 @@ public partial class MainViewModel : ObservableObject
         var pos = ShowWork ? snap.WorkPos : snap.MachinePos;
         PosX = pos.X; PosY = pos.Y; PosZ = pos.Z; PosA = pos.A;
 
-        FeedRate    = snap.FeedRate;
-        LaserPower  = snap.LaserPower;
+        FeedRate     = snap.FeedRate;
+        LaserPower   = snap.LaserPower;
         FeedOverride = snap.FeedOverride;
         LimitX = snap.LimitX; LimitY = snap.LimitY; LimitZ = snap.LimitZ;
 

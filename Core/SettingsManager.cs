@@ -11,23 +11,57 @@ public class SettingsManager
 
     private static readonly JsonObject Defaults = new()
     {
+        // Tipo de máquina
+        ["machine_type"]      = "Laser",
+
+        // Controlador
         ["controller_type"]   = "GRBL",
         ["m_on"]              = "M3",
         ["m_off"]             = "M5",
         ["m_home"]            = "$H",
         ["m_unlock"]          = "$X",
         ["m_pierce"]          = 0.5,
+
+        // Ligação
         ["port"]              = "COM3",
         ["baud"]              = 115200,
+
+        // Laser
         ["laser_mode"]        = "PWM",
         ["laser_max_s"]       = 1000,
         ["laser_default_power"] = 50,
         ["laser_test_fire_ms"]  = 500,
+
+        // Spindle (Drill / Turn)
+        ["spindle_on_fwd"]    = "M3",
+        ["spindle_on_rev"]    = "M4",
+        ["spindle_off"]       = "M5",
+        ["spindle_max_rpm"]   = 24000,
+        ["spindle_default_rpm"] = 1000,
+
+        // Coolant
+        ["coolant_on"]        = "M8",
+        ["coolant_off"]       = "M9",
+
+        // Torno
+        ["turn_diameter_mode"] = false,
+        ["turn_css_mode"]      = false,
+        ["turn_css_speed"]     = 100.0,   // m/min
+
+        // TurnLaser — M-codes do laser (diferentes do spindle)
+        ["turn_laser_on"]     = "M7",
+        ["turn_laser_off"]    = "M107",
+
+        // Jog
         ["jog_feed"]          = 500.0,
         ["jog_step"]          = 1.0,
+
+        // Visualizador
         ["tube_W"]            = 50.0,
         ["tube_H"]            = 50.0,
         ["standoff"]          = 3.0,
+
+        // Janela
         ["window_width"]      = 1400,
         ["window_height"]     = 900,
         ["mdi_history"]       = new JsonArray(),
@@ -46,7 +80,6 @@ public class SettingsManager
         lock (_lock)
         {
             _data = [];
-            // Copiar defaults
             foreach (var kv in Defaults) _data[kv.Key] = kv.Value?.DeepClone();
 
             if (!File.Exists(_path)) return;
@@ -58,7 +91,7 @@ public class SettingsManager
                     foreach (var kv in node)
                         _data[kv.Key] = kv.Value?.DeepClone();
             }
-            catch { /* Manter defaults se o ficheiro estiver corrompido */ }
+            catch { }
         }
     }
 
@@ -88,6 +121,7 @@ public class SettingsManager
     public int    GetInt   (string key, int    def = 0) => Get(key, def);
     public double GetDouble(string key, double def = 0) => Get(key, def);
     public bool   GetBool  (string key, bool   def = false) => Get(key, def);
+
     public List<string> GetStringList(string key)
     {
         lock (_lock)
@@ -117,6 +151,8 @@ public class SettingsManager
         Save();
     }
 
+    // ── Factories ─────────────────────────────────────────────────────────
+
     public MCodes BuildMCodes() => new(
         On:     GetString("m_on",     "M3"),
         Off:    GetString("m_off",    "M5"),
@@ -125,4 +161,22 @@ public class SettingsManager
         Pierce: GetDouble("m_pierce",    0.5),
         Home:   GetString("m_home",      "$H"),
         Unlock: GetString("m_unlock",    "$X"));
+
+    public SpindleCodes BuildSpindleCodes() => new(
+        SpindleOnFwd: GetString("spindle_on_fwd", "M3"),
+        SpindleOnRev: GetString("spindle_on_rev", "M4"),
+        SpindleOff:   GetString("spindle_off",    "M5"),
+        CoolantOn:    GetString("coolant_on",     "M8"),
+        CoolantOff:   GetString("coolant_off",    "M9"),
+        MaxRpm:       GetInt   ("spindle_max_rpm", 24000),
+        Home:         GetString("m_home",          "$H"),
+        Unlock:       GetString("m_unlock",        "$X"));
+
+    public MachineType GetMachineType()
+    {
+        var s = GetString("machine_type", "Laser");
+        return Enum.TryParse<MachineType>(s, true, out var mt) ? mt : MachineType.Laser;
+    }
+
+    public void SetMachineType(MachineType mt) => Set("machine_type", mt.ToString());
 }

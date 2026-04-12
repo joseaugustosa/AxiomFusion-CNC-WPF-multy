@@ -24,6 +24,23 @@ public partial class SettingsDialog : Window
 
     private void LoadFromSettings()
     {
+        // ── Tab: Tipo de Máquina ──────────────────────────────────────────
+        var mt = _s.GetMachineType();
+        RbLaser.IsChecked     = mt == MachineType.Laser;
+        RbDrill.IsChecked     = mt == MachineType.Drill;
+        RbTurn.IsChecked      = mt == MachineType.Turn;
+        RbTurnLaser.IsChecked = mt == MachineType.TurnLaser;
+
+        TbSpindleOnFwd.Text  = _s.GetString("spindle_on_fwd",  "M3");
+        TbSpindleOnRev.Text  = _s.GetString("spindle_on_rev",  "M4");
+        TbSpindleOff.Text    = _s.GetString("spindle_off",     "M5");
+        TbSpindleMaxRpm.Text = _s.GetInt   ("spindle_max_rpm", 24000).ToString();
+        TbCoolantOn.Text     = _s.GetString("coolant_on",      "M8");
+        TbCoolantOff.Text    = _s.GetString("coolant_off",     "M9");
+        TbTurnLaserOn.Text   = _s.GetString("turn_laser_on",   "M7");
+        TbTurnLaserOff.Text  = _s.GetString("turn_laser_off",  "M107");
+
+        // ── Tab: Controlador ──────────────────────────────────────────────
         RbGrbl.IsChecked  = _s.GetString("controller_type", "GRBL") == "GRBL";
         RbIso.IsChecked   = !RbGrbl.IsChecked;
         TbMOn.Text        = _s.GetString("m_on",         "M3");
@@ -31,11 +48,17 @@ public partial class SettingsDialog : Window
         TbHome.Text       = _s.GetString("m_home",       "$H");
         TbUnlock.Text     = _s.GetString("m_unlock",     "$X");
         TbPierce.Text     = _s.GetDouble("m_pierce",     0.5).ToString("F2", CultureInfo.InvariantCulture);
+
+        // ── Tab: Laser ────────────────────────────────────────────────────
         TbMaxS.Text       = _s.GetInt("laser_max_s",     1000).ToString();
         RbPwm.IsChecked   = _s.GetString("laser_mode",   "PWM") == "PWM";
         RbTtl.IsChecked   = !RbPwm.IsChecked;
+
+        // ── Tab: Ligação ──────────────────────────────────────────────────
         TbPort.Text       = _s.GetString("port",         "COM3");
         TbBaud.Text       = _s.GetInt("baud",            115200).ToString();
+
+        // ── Tab: Tubo / Máquina ───────────────────────────────────────────
         TbW.Text          = _s.GetDouble("tube_W",       50.0).ToString("F1", CultureInfo.InvariantCulture);
         TbH.Text          = _s.GetDouble("tube_H",       50.0).ToString("F1", CultureInfo.InvariantCulture);
         TbStandoff.Text   = _s.GetDouble("standoff",     3.0).ToString("F1", CultureInfo.InvariantCulture);
@@ -44,6 +67,23 @@ public partial class SettingsDialog : Window
 
     public void SaveToSettings(SettingsManager s)
     {
+        // ── Tipo de Máquina ───────────────────────────────────────────────
+        var mt = RbDrill.IsChecked == true ? MachineType.Drill
+               : RbTurn.IsChecked  == true ? MachineType.Turn
+               : RbTurnLaser.IsChecked == true ? MachineType.TurnLaser
+               : MachineType.Laser;
+        s.SetMachineType(mt);
+
+        s.Set("spindle_on_fwd",  TbSpindleOnFwd.Text.Trim());
+        s.Set("spindle_on_rev",  TbSpindleOnRev.Text.Trim());
+        s.Set("spindle_off",     TbSpindleOff.Text.Trim());
+        if (int.TryParse(TbSpindleMaxRpm.Text, out var maxRpm)) s.Set("spindle_max_rpm", maxRpm);
+        s.Set("coolant_on",      TbCoolantOn.Text.Trim());
+        s.Set("coolant_off",     TbCoolantOff.Text.Trim());
+        s.Set("turn_laser_on",   TbTurnLaserOn.Text.Trim());
+        s.Set("turn_laser_off",  TbTurnLaserOff.Text.Trim());
+
+        // ── Controlador ───────────────────────────────────────────────────
         s.Set("controller_type", RbGrbl.IsChecked == true ? "GRBL" : "ISO");
         s.Set("m_on",    TbMOn.Text.Trim().Length > 0 ? TbMOn.Text.Trim() : "M3");
         s.Set("m_off",   TbMOff.Text.Trim().Length > 0 ? TbMOff.Text.Trim() : "M5");
@@ -51,10 +91,16 @@ public partial class SettingsDialog : Window
         s.Set("m_unlock",TbUnlock.Text.Trim());
         if (double.TryParse(TbPierce.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var pierce))
             s.Set("m_pierce", pierce);
+
+        // ── Laser ─────────────────────────────────────────────────────────
         if (int.TryParse(TbMaxS.Text, out var maxS)) s.Set("laser_max_s", maxS);
         s.Set("laser_mode", RbPwm.IsChecked == true ? "PWM" : "TTL");
+
+        // ── Ligação ───────────────────────────────────────────────────────
         s.Set("port", TbPort.Text.Trim());
         if (int.TryParse(TbBaud.Text, out var baud)) s.Set("baud", baud);
+
+        // ── Tubo / Máquina ────────────────────────────────────────────────
         if (double.TryParse(TbW.Text,        NumberStyles.Any, CultureInfo.InvariantCulture, out var w))  s.Set("tube_W",   w);
         if (double.TryParse(TbH.Text,        NumberStyles.Any, CultureInfo.InvariantCulture, out var h))  s.Set("tube_H",   h);
         if (double.TryParse(TbStandoff.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var st)) s.Set("standoff", st);

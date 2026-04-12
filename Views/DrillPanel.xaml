@@ -1,0 +1,51 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.DrillPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GroupBox Header="Controlo Fresa / Furadeira" Style="{StaticResource DarkGroupBox}">
+        <StackPanel>
+
+            <!-- ── Spindle RPM ─────────────────────────────────────────── -->
+            <Label Content="Velocidade Spindle:" Style="{StaticResource SmallLabel}" Margin="4,4,4,0"/>
+            <StackPanel Orientation="Horizontal" Margin="4,2">
+                <TextBox x:Name="TbRpm" Width="80" Style="{StaticResource DarkTextBox}"
+                         Text="{Binding SpindleRpm, StringFormat={}{0:F0}}"
+                         LostFocus="TbRpm_LostFocus"/>
+                <Label Content="RPM" Style="{StaticResource SmallLabel}"/>
+                <Button Content="Aplicar" Style="{StaticResource SmallButton}" Margin="4,0,0,0"
+                        Command="{Binding ApplySpindleRpmCommand}"/>
+            </StackPanel>
+
+            <!-- ── Controlo do spindle ─────────────────────────────────── -->
+            <Label Content="Spindle:" Style="{StaticResource SmallLabel}" Margin="4,6,4,0"/>
+            <UniformGrid Rows="1" Columns="2" Margin="4,2">
+                <Button Content="M3  ▶  Frente" Style="{StaticResource SmallButton}" Margin="2"
+                        Command="{Binding SpindleOnCommand}"/>
+                <Button Content="M5  ■  Stop"   Style="{StaticResource AbortButton}"  Margin="2"
+                        Command="{Binding SpindleOffCommand}"/>
+            </UniformGrid>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="4,6"/>
+
+            <!-- ── Refrigeração ────────────────────────────────────────── -->
+            <Label Content="Refrigeração:" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+            <UniformGrid Rows="1" Columns="2" Margin="4,2">
+                <Button Content="M8  Ligar"  Style="{StaticResource SmallButton}" Margin="2"
+                        Command="{Binding CoolantOnCmdCommand}"/>
+                <Button Content="M9  Desligar" Style="{StaticResource SmallButton}" Margin="2"
+                        Command="{Binding CoolantOffCmdCommand}"/>
+            </UniformGrid>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="4,6"/>
+
+            <!-- ── Troca de ferramenta ─────────────────────────────────── -->
+            <Label Content="Ferramenta:" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+            <StackPanel Orientation="Horizontal" Margin="4,2">
+                <Label Content="T" Style="{StaticResource SmallLabel}"/>
+                <TextBox x:Name="TbTool" Text="1" Width="40" Style="{StaticResource DarkTextBox}"/>
+                <Button Content="M6 Trocar" Style="{StaticResource SmallButton}" Margin="4,0,0,0"
+                        Click="BtnToolChange_Click"/>
+            </StackPanel>
+
+        </StackPanel>
+    </GroupBox>
+</UserControl>

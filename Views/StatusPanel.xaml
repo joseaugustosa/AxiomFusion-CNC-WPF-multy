@@ -23,7 +23,7 @@
                                Text="{Binding FeedRate, StringFormat={}{0} mm/min}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1">
-                    <Label Content="Laser S:" Style="{StaticResource SmallLabel}"/>
+                    <Label Content="{Binding SpindleOrLaserLabel}" Style="{StaticResource SmallLabel}"/>
                     <TextBlock Style="{StaticResource ValueDisplay}"
                                Text="{Binding LaserPower}"/>
                 </StackPanel>

@@ -4,10 +4,36 @@ namespace AxiomFusion.CncController.Core;
 
 public static class GCodePreprocessor
 {
+    // ── Variantes conhecidas de M-codes laser/spindle ─────────────────────
     private static readonly HashSet<string> LaserOnVariants  = ["M3","M03","M4","M04"];
     private static readonly HashSet<string> LaserOffVariants = ["M5","M05","M9","M09"];
 
+    // ── Preprocessamento por tipo de máquina ─────────────────────────────
+
+    /// <summary>Preprocessa linhas de G-code para o modo laser (comportamento original).</summary>
     public static List<string> Preprocess(List<string> lines, MCodes codes)
+        => PreprocessLaser(lines, codes);
+
+    /// <summary>Preprocessa G-code de acordo com o tipo de máquina.</summary>
+    public static List<string> PreprocessForMachine(
+        List<string> lines,
+        MachineType  machine,
+        MCodes       laserCodes,
+        SpindleCodes spindleCodes)
+    {
+        return machine switch
+        {
+            MachineType.Laser     => PreprocessLaser(lines, laserCodes),
+            MachineType.Drill     => PreprocessDrill(lines, spindleCodes),
+            MachineType.Turn      => PreprocessTurn(lines, spindleCodes),
+            MachineType.TurnLaser => PreprocessTurnLaser(lines, laserCodes, spindleCodes),
+            _                     => lines,
+        };
+    }
+
+    // ── Laser ─────────────────────────────────────────────────────────────
+
+    private static List<string> PreprocessLaser(List<string> lines, MCodes codes)
     {
         string mOn   = codes.On.ToUpperInvariant().Trim();
         string mOff  = codes.Off.ToUpperInvariant().Trim();
@@ -18,32 +44,90 @@ public static class GCodePreprocessor
         var result = new List<string>(lines.Count);
         foreach (var raw in lines)
         {
-            string codePart, comment;
-            int si = raw.IndexOf(';');
-            if (si >= 0) { codePart = raw[..si]; comment = "; " + raw[(si+1)..]; }
-            else         { codePart = raw;        comment = "";                    }
-
+            var (codePart, comment) = SplitComment(raw);
             var line = codePart.Trim();
             if (string.IsNullOrEmpty(line)) { result.Add(raw); continue; }
 
-            line = ReplaceMOn(line,  mOn,  maxS, mode, pierce);
-            line = ReplaceMOff(line, mOff);
+            line = ReplaceLaserOn(line,  mOn,  maxS, mode, pierce);
+            line = ReplaceLaserOff(line, mOff);
             result.Add(line + comment);
         }
         return result;
     }
 
-    private static string ReplaceMOn(string line, string mOn, int maxS, string mode, double pierce)
+    // ── Drill / Fresa ─────────────────────────────────────────────────────
+
+    private static List<string> PreprocessDrill(List<string> lines, SpindleCodes codes)
+    {
+        var result = new List<string>(lines.Count);
+        foreach (var raw in lines)
+        {
+            var (codePart, comment) = SplitComment(raw);
+            var line = codePart.Trim();
+            if (string.IsNullOrEmpty(line)) { result.Add(raw); continue; }
+
+            line = ReplaceSpindle(line, codes);
+            line = ReplaceCoolant(line, codes);
+            result.Add(line + comment);
+        }
+        return result;
+    }
+
+    // ── Turn / Torno ──────────────────────────────────────────────────────
+
+    private static List<string> PreprocessTurn(List<string> lines, SpindleCodes codes)
+    {
+        // Mesmo que Drill mas mantém M4 (reversão do spindle)
+        return PreprocessDrill(lines, codes);
+    }
+
+    // ── TurnLaser — torno + laser combinado ───────────────────────────────
+    // Convenção: M3/M4/M5 = spindle | M7/M107 = laser on | M9/M109 = laser off
+    // O utilizador configura o M-code do laser para um valor diferente do spindle.
+
+    private static readonly HashSet<string> TurnLaserOnVariants  = ["M7","M07"];
+    private static readonly HashSet<string> TurnLaserOffVariants = ["M107","M09"];
+
+    private static List<string> PreprocessTurnLaser(
+        List<string> lines, MCodes laserCodes, SpindleCodes spindleCodes)
+    {
+        string lOn    = laserCodes.On.ToUpperInvariant().Trim();
+        string lOff   = laserCodes.Off.ToUpperInvariant().Trim();
+        int    maxS   = laserCodes.MaxS;
+        string mode   = laserCodes.Mode;
+        double pierce = laserCodes.Pierce;
+
+        var result = new List<string>(lines.Count);
+        foreach (var raw in lines)
+        {
+            var (codePart, comment) = SplitComment(raw);
+            var line = codePart.Trim();
+            if (string.IsNullOrEmpty(line)) { result.Add(raw); continue; }
+
+            // Spindle (M3/M4/M5) — substituição por configurados
+            line = ReplaceSpindle(line, spindleCodes);
+            // Coolant (M8/M9)
+            line = ReplaceCoolant(line, spindleCodes);
+            // Laser on (M7 → laser M-code configurado)
+            line = ReplaceTurnLaserOn(line,  lOn, maxS, mode, pierce);
+            // Laser off (M107 → laser off configurado)
+            line = ReplaceTurnLaserOff(line, lOff);
+            result.Add(line + comment);
+        }
+        return result;
+    }
+
+    // ── Helpers de substituição ───────────────────────────────────────────
+
+    private static string ReplaceLaserOn(string line, string mOn, int maxS, string mode, double pierce)
     {
         string upper = line.ToUpperInvariant();
         foreach (var variant in LaserOnVariants)
         {
             if (!Regex.IsMatch(upper, $@"\b{variant}\b")) continue;
-
             bool hasS = Regex.IsMatch(upper, @"\bS\d");
             line = Regex.Replace(line, $@"\b{variant}\b", mOn, RegexOptions.IgnoreCase);
             if (!hasS && mode == "PWM") line += $" S{maxS}";
-
             if (pierce > 0 && !upper.Contains("G4") && !upper.Contains("G04"))
                 line += $"\nG4 P{pierce:F2}";
             break;
@@ -51,7 +135,7 @@ public static class GCodePreprocessor
         return line;
     }
 
-    private static string ReplaceMOff(string line, string mOff)
+    private static string ReplaceLaserOff(string line, string mOff)
     {
         string upper = line.ToUpperInvariant();
         foreach (var variant in LaserOffVariants)
@@ -62,6 +146,68 @@ public static class GCodePreprocessor
         }
         return line;
     }
+
+    private static string ReplaceSpindle(string line, SpindleCodes codes)
+    {
+        string upper = line.ToUpperInvariant();
+        // M3 → SpindleOnFwd
+        if (Regex.IsMatch(upper, @"\bM0?3\b"))
+            line = Regex.Replace(line, @"\bM0?3\b", codes.SpindleOnFwd, RegexOptions.IgnoreCase);
+        // M4 → SpindleOnRev
+        else if (Regex.IsMatch(upper, @"\bM0?4\b"))
+            line = Regex.Replace(line, @"\bM0?4\b", codes.SpindleOnRev, RegexOptions.IgnoreCase);
+        // M5 → SpindleOff
+        else if (Regex.IsMatch(upper, @"\bM0?5\b"))
+            line = Regex.Replace(line, @"\bM0?5\b", codes.SpindleOff, RegexOptions.IgnoreCase);
+        return line;
+    }
+
+    private static string ReplaceCoolant(string line, SpindleCodes codes)
+    {
+        string upper = line.ToUpperInvariant();
+        if (Regex.IsMatch(upper, @"\bM0?8\b"))
+            line = Regex.Replace(line, @"\bM0?8\b", codes.CoolantOn,  RegexOptions.IgnoreCase);
+        else if (Regex.IsMatch(upper, @"\bM0?9\b"))
+            line = Regex.Replace(line, @"\bM0?9\b", codes.CoolantOff, RegexOptions.IgnoreCase);
+        return line;
+    }
+
+    private static string ReplaceTurnLaserOn(string line, string mOn, int maxS, string mode, double pierce)
+    {
+        string upper = line.ToUpperInvariant();
+        foreach (var variant in TurnLaserOnVariants)
+        {
+            if (!Regex.IsMatch(upper, $@"\b{variant}\b")) continue;
+            bool hasS = Regex.IsMatch(upper, @"\bS\d");
+            line = Regex.Replace(line, $@"\b{variant}\b", mOn, RegexOptions.IgnoreCase);
+            if (!hasS && mode == "PWM") line += $" S{maxS}";
+            if (pierce > 0) line += $"\nG4 P{pierce:F2}";
+            break;
+        }
+        return line;
+    }
+
+    private static string ReplaceTurnLaserOff(string line, string mOff)
+    {
+        string upper = line.ToUpperInvariant();
+        foreach (var variant in TurnLaserOffVariants)
+        {
+            if (!Regex.IsMatch(upper, $@"\b{variant}\b")) continue;
+            line = Regex.Replace(line, $@"\b{variant}\b", mOff, RegexOptions.IgnoreCase);
+            break;
+        }
+        return line;
+    }
+
+    private static (string code, string comment) SplitComment(string raw)
+    {
+        int si = raw.IndexOf(';');
+        return si >= 0
+            ? (raw[..si], "; " + raw[(si + 1)..])
+            : (raw, "");
+    }
+
+    // ── Validação ─────────────────────────────────────────────────────────
 
     public static List<string> Validate(List<string> lines)
     {

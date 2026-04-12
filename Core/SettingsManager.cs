@@ -1,0 +1,128 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace AxiomFusion.CncController.Core;
+
+public class SettingsManager
+{
+    private readonly string _path;
+    private JsonObject _data;
+    private readonly object _lock = new();
+
+    private static readonly JsonObject Defaults = new()
+    {
+        ["controller_type"]   = "GRBL",
+        ["m_on"]              = "M3",
+        ["m_off"]             = "M5",
+        ["m_home"]            = "$H",
+        ["m_unlock"]          = "$X",
+        ["m_pierce"]          = 0.5,
+        ["port"]              = "COM3",
+        ["baud"]              = 115200,
+        ["laser_mode"]        = "PWM",
+        ["laser_max_s"]       = 1000,
+        ["laser_default_power"] = 50,
+        ["laser_test_fire_ms"]  = 500,
+        ["jog_feed"]          = 500.0,
+        ["jog_step"]          = 1.0,
+        ["tube_W"]            = 50.0,
+        ["tube_H"]            = 50.0,
+        ["standoff"]          = 3.0,
+        ["window_width"]      = 1400,
+        ["window_height"]     = 900,
+        ["mdi_history"]       = new JsonArray(),
+    };
+
+    public SettingsManager(string? path = null)
+    {
+        _path = path ?? Path.Combine(
+            AppContext.BaseDirectory, "config", "settings.json");
+        _data = [];
+        Load();
+    }
+
+    public void Load()
+    {
+        lock (_lock)
+        {
+            _data = [];
+            // Copiar defaults
+            foreach (var kv in Defaults) _data[kv.Key] = kv.Value?.DeepClone();
+
+            if (!File.Exists(_path)) return;
+            try
+            {
+                var json = File.ReadAllText(_path);
+                var node = JsonNode.Parse(json) as JsonObject;
+                if (node != null)
+                    foreach (var kv in node)
+                        _data[kv.Key] = kv.Value?.DeepClone();
+            }
+            catch { /* Manter defaults se o ficheiro estiver corrompido */ }
+        }
+    }
+
+    public void Save()
+    {
+        lock (_lock)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+            var tmp = _path + ".tmp";
+            File.WriteAllText(tmp, _data.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(tmp, _path, overwrite: true);
+        }
+    }
+
+    public T Get<T>(string key, T defaultValue = default!)
+    {
+        lock (_lock)
+        {
+            if (!_data.TryGetPropertyValue(key, out var node) || node is null)
+                return defaultValue;
+            try { return node.GetValue<T>(); }
+            catch { return defaultValue; }
+        }
+    }
+
+    public string GetString(string key, string def = "") => Get(key, def);
+    public int    GetInt   (string key, int    def = 0) => Get(key, def);
+    public double GetDouble(string key, double def = 0) => Get(key, def);
+    public bool   GetBool  (string key, bool   def = false) => Get(key, def);
+    public List<string> GetStringList(string key)
+    {
+        lock (_lock)
+        {
+            if (!_data.TryGetPropertyValue(key, out var node) || node is not JsonArray arr)
+                return [];
+            return arr.Select(n => n?.GetValue<string>() ?? "").ToList();
+        }
+    }
+
+    public void Set(string key, object? value)
+    {
+        lock (_lock)
+        {
+            _data[key] = value switch
+            {
+                null             => null,
+                string s         => JsonValue.Create(s),
+                int    i         => JsonValue.Create(i),
+                double d         => JsonValue.Create(d),
+                bool   b         => JsonValue.Create(b),
+                float  f         => JsonValue.Create((double)f),
+                IEnumerable<string> list => new JsonArray(list.Select(s => JsonValue.Create(s) as JsonNode).ToArray()),
+                _                => JsonValue.Create(value.ToString()),
+            };
+        }
+        Save();
+    }
+
+    public MCodes BuildMCodes() => new(
+        On:     GetString("m_on",     "M3"),
+        Off:    GetString("m_off",    "M5"),
+        MaxS:   GetInt   ("laser_max_s", 1000),
+        Mode:   GetString("laser_mode",  "PWM"),
+        Pierce: GetDouble("m_pierce",    0.5),
+        Home:   GetString("m_home",      "$H"),
+        Unlock: GetString("m_unlock",    "$X"));
+}

@@ -1,0 +1,78 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.VisualizerPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:h="http://helix-toolkit.org/wpf">
+    <DockPanel>
+        <!-- Toolbar -->
+        <ToolBar DockPanel.Dock="Top" Style="{StaticResource DarkToolBar}">
+            <Button Content="Ajustar Vista" Style="{StaticResource SmallButton}" Click="BtnFit_Click"/>
+            <Separator/>
+            <ToggleButton x:Name="BtnTube" Content="Tubo: ON" IsChecked="True"
+                          Style="{StaticResource DarkToggleButton}" Click="BtnTube_Click"/>
+            <Separator/>
+            <TextBlock Text="↙ Orbit  ↕ Pan  ⊕ Zoom" Foreground="#6c7086"
+                       FontSize="11" VerticalAlignment="Center" Margin="6,0"/>
+        </ToolBar>
+
+        <!-- Viewport 3D (HelixToolkit) -->
+        <h:HelixViewport3D x:Name="Viewport"
+                           Background="#11111b"
+                           ShowCoordinateSystem="True"
+                           ShowFrameRate="False"
+                           IsHeadLightEnabled="True"
+                           CameraRotationMode="Trackball">
+
+            <!-- Iluminação -->
+            <h:HelixViewport3D.DefaultCamera>
+                <PerspectiveCamera FieldOfView="45"
+                                   Position="200,200,200"
+                                   LookDirection="-1,-1,-1"
+                                   UpDirection="0,0,1"/>
+            </h:HelixViewport3D.DefaultCamera>
+
+            <!-- Grelha de referência -->
+            <h:GridLinesVisual3D x:Name="Grid"
+                                 Width="200" Length="200"
+                                 MajorDistance="50" MinorDistance="10"
+                                 Thickness="0.3">
+                <h:GridLinesVisual3D.Material>
+                    <DiffuseMaterial>
+                        <DiffuseMaterial.Brush>
+                            <SolidColorBrush Color="#444466" Opacity="0.15"/>
+                        </DiffuseMaterial.Brush>
+                    </DiffuseMaterial>
+                </h:GridLinesVisual3D.Material>
+            </h:GridLinesVisual3D>
+
+            <!-- Tubo (gerado no code-behind) -->
+            <h:MeshGeometryVisual3D x:Name="TubeVisual">
+                <h:MeshGeometryVisual3D.Material>
+                    <DiffuseMaterial>
+                        <DiffuseMaterial.Brush>
+                            <SolidColorBrush Color="#6688aa" Opacity="0.4"/>
+                        </DiffuseMaterial.Brush>
+                    </DiffuseMaterial>
+                </h:MeshGeometryVisual3D.Material>
+                <h:MeshGeometryVisual3D.BackMaterial>
+                    <DiffuseMaterial>
+                        <DiffuseMaterial.Brush>
+                            <SolidColorBrush Color="#446688" Opacity="0.15"/>
+                        </DiffuseMaterial.Brush>
+                    </DiffuseMaterial>
+                </h:MeshGeometryVisual3D.BackMaterial>
+            </h:MeshGeometryVisual3D>
+
+            <!-- Toolpath — linhas coloridas -->
+            <h:LinesVisual3D x:Name="PathRapid"
+                             Color="#446677" Thickness="1"/>
+            <h:LinesVisual3D x:Name="PathTravel"
+                             Color="#4466ff" Thickness="1.5"/>
+            <h:LinesVisual3D x:Name="PathCut"
+                             Color="#ff4444" Thickness="2"/>
+
+            <!-- Linha actual -->
+            <h:LinesVisual3D x:Name="PathCurrent"
+                             Color="#ffff00" Thickness="3"/>
+        </h:HelixViewport3D>
+    </DockPanel>
+</UserControl>

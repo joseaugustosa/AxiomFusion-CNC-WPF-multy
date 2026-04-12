@@ -1,0 +1,52 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.LaserPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GroupBox Header="Controlo Laser" Style="{StaticResource DarkGroupBox}">
+        <StackPanel>
+            <!-- Modo PWM / TTL -->
+            <StackPanel Orientation="Horizontal" Margin="4,4,4,8">
+                <Label Content="Modo:" Style="{StaticResource SmallLabel}" Width="48"/>
+                <RadioButton x:Name="RbPwm" Content="PWM" Foreground="#cdd6f4"
+                             IsChecked="True" Margin="4,0" VerticalAlignment="Center"
+                             Checked="Mode_Changed"/>
+                <RadioButton x:Name="RbTtl" Content="TTL" Foreground="#cdd6f4"
+                             Margin="4,0" VerticalAlignment="Center"
+                             Checked="Mode_Changed"/>
+            </StackPanel>
+
+            <!-- PWM Group -->
+            <StackPanel x:Name="PwmGroup">
+                <Label Content="Potência PWM:" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+                <Slider x:Name="SliderPwm" Minimum="0" Maximum="100" Value="{Binding LaserPwmPct}"
+                        Style="{StaticResource DarkSlider}" Margin="4,2"
+                        ValueChanged="SliderPwm_Changed"/>
+                <StackPanel Orientation="Horizontal" Margin="4,0">
+                    <TextBlock Text="{Binding LaserPwmPct, StringFormat={}{0:F0}%}"
+                               Foreground="#a6e3a1" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock x:Name="TbSValue" Text=" S=1000" Foreground="#6c7086"
+                               FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- TTL Group -->
+            <StackPanel x:Name="TtlGroup" Visibility="Collapsed" Margin="4,4">
+                <ToggleButton x:Name="BtnTtl" Content="LASER OFF"
+                              IsChecked="{Binding LaserTtlOn}"
+                              Style="{StaticResource LaserTtlButton}"
+                              Click="BtnTtl_Click" Height="44"/>
+            </StackPanel>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="4,8"/>
+
+            <!-- Disparo de teste -->
+            <Label Content="Teste de Disparo:" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+            <StackPanel Orientation="Horizontal" Margin="4,4">
+                <Label Content="Duração:" Style="{StaticResource SmallLabel}" Width="64"/>
+                <TextBox x:Name="TbDuration" Text="500" Style="{StaticResource DarkTextBox}" Width="60"/>
+                <Label Content="ms" Style="{StaticResource SmallLabel}"/>
+            </StackPanel>
+            <Button Content="Disparo de Teste" Style="{StaticResource SmallButton}"
+                    Margin="4,2" Click="BtnTestFire_Click"/>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

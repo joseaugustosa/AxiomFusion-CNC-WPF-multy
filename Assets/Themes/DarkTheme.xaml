@@ -1,0 +1,319 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:AxiomFusion.CncController.Converters">
+
+    <!-- ── Converters ──────────────────────────────────────────────────── -->
+    <conv:StringToBrushConverter x:Key="StringToBrush"/>
+
+    <!-- ── Cores principais (Catppuccin Mocha) ──────────────────────────── -->
+    <SolidColorBrush x:Key="BgBase"     Color="#1e1e2e"/>
+    <SolidColorBrush x:Key="BgMantle"   Color="#181825"/>
+    <SolidColorBrush x:Key="BgSurface0" Color="#313244"/>
+    <SolidColorBrush x:Key="BgSurface1" Color="#45475a"/>
+    <SolidColorBrush x:Key="FgText"     Color="#cdd6f4"/>
+    <SolidColorBrush x:Key="FgSubtext"  Color="#6c7086"/>
+    <SolidColorBrush x:Key="Accent"     Color="#89b4fa"/>
+    <SolidColorBrush x:Key="Green"      Color="#a6e3a1"/>
+    <SolidColorBrush x:Key="Red"        Color="#f38ba8"/>
+    <SolidColorBrush x:Key="Orange"     Color="#fab387"/>
+    <SolidColorBrush x:Key="Yellow"     Color="#f9e2af"/>
+    <SolidColorBrush x:Key="Terminal"   Color="#11111b"/>
+
+    <!-- ── GroupBox ─────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkGroupBox" TargetType="GroupBox">
+        <Setter Property="Foreground"   Value="{StaticResource FgText}"/>
+        <Setter Property="BorderBrush"  Value="{StaticResource BgSurface0}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Margin"       Value="2"/>
+        <Setter Property="Padding"      Value="4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GroupBox">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Background="{StaticResource BgSurface0}"
+                                CornerRadius="4,4,0,0" Padding="8,3">
+                            <ContentPresenter ContentSource="Header"
+                                              TextElement.Foreground="{StaticResource Accent}"
+                                              TextElement.FontWeight="SemiBold"
+                                              TextElement.FontSize="12"/>
+                        </Border>
+                        <Border Grid.Row="1" BorderBrush="{StaticResource BgSurface0}"
+                                BorderThickness="1" CornerRadius="0,0,4,4"
+                                Background="{StaticResource BgMantle}" Padding="4">
+                            <ContentPresenter/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Labels ───────────────────────────────────────────────────────── -->
+    <Style x:Key="AxisLabel" TargetType="Label">
+        <Setter Property="Foreground" Value="{StaticResource FgSubtext}"/>
+        <Setter Property="FontSize"   Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding"    Value="4,0"/>
+    </Style>
+    <Style x:Key="SmallLabel" TargetType="Label">
+        <Setter Property="Foreground" Value="{StaticResource FgSubtext}"/>
+        <Setter Property="FontSize"   Value="11"/>
+        <Setter Property="Padding"    Value="2,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="ToolbarLabel" TargetType="Label">
+        <Setter Property="Foreground" Value="{StaticResource FgText}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding"    Value="4,0"/>
+    </Style>
+
+    <!-- ── DRO Display ──────────────────────────────────────────────────── -->
+    <Style x:Key="DroDisplay" TargetType="TextBlock">
+        <Setter Property="FontFamily"   Value="Consolas, Courier New, monospace"/>
+        <Setter Property="FontSize"     Value="26"/>
+        <Setter Property="FontWeight"   Value="Bold"/>
+        <Setter Property="Foreground"   Value="{StaticResource Green}"/>
+        <Setter Property="Background"   Value="{StaticResource Terminal}"/>
+        <Setter Property="Padding"      Value="8,4"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ── Value Display ────────────────────────────────────────────────── -->
+    <Style x:Key="ValueDisplay" TargetType="TextBlock">
+        <Setter Property="FontFamily"  Value="Consolas, Courier New, monospace"/>
+        <Setter Property="FontSize"    Value="14"/>
+        <Setter Property="FontWeight"  Value="Bold"/>
+        <Setter Property="Foreground"  Value="{StaticResource Accent}"/>
+        <Setter Property="Margin"      Value="4,2"/>
+    </Style>
+
+    <!-- ── Buttons ──────────────────────────────────────────────────────── -->
+    <Style x:Key="BaseButton" TargetType="Button">
+        <Setter Property="Foreground"        Value="{StaticResource FgText}"/>
+        <Setter Property="Background"        Value="{StaticResource BgSurface0}"/>
+        <Setter Property="BorderBrush"       Value="{StaticResource BgSurface1}"/>
+        <Setter Property="BorderThickness"   Value="1"/>
+        <Setter Property="Padding"           Value="8,4"/>
+        <Setter Property="Cursor"            Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource BgSurface1}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="#89b4fa22"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SmallButton"   BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Padding" Value="6,3"/>
+        <Setter Property="FontSize" Value="11"/>
+    </Style>
+    <Style x:Key="PrimaryButton" BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Background"  Value="#89b4fa"/>
+        <Setter Property="Foreground"  Value="#1e1e2e"/>
+        <Setter Property="FontWeight"  Value="Bold"/>
+    </Style>
+    <Style x:Key="StartButton"   BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Background"  Value="#40a02b"/>
+        <Setter Property="Foreground"  Value="White"/>
+        <Setter Property="FontWeight"  Value="Bold"/>
+    </Style>
+    <Style x:Key="HoldButton"    BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Background"  Value="#df8e1d"/>
+        <Setter Property="Foreground"  Value="White"/>
+        <Setter Property="FontWeight"  Value="Bold"/>
+    </Style>
+    <Style x:Key="AbortButton"   BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Background"  Value="#d20f39"/>
+        <Setter Property="Foreground"  Value="White"/>
+        <Setter Property="FontWeight"  Value="Bold"/>
+    </Style>
+    <Style x:Key="ToolbarButton" BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Padding"    Value="8,4"/>
+    </Style>
+    <Style x:Key="JogButton"     BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Width"      Value="52"/>
+        <Setter Property="Height"     Value="40"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize"   Value="14"/>
+    </Style>
+    <Style x:Key="JogCenterButton" BasedOn="{StaticResource BaseButton}" TargetType="Button">
+        <Setter Property="Width"       Value="52"/>
+        <Setter Property="Height"      Value="40"/>
+        <Setter Property="IsEnabled"   Value="False"/>
+        <Setter Property="Background"  Value="{StaticResource BgMantle}"/>
+        <Setter Property="Foreground"  Value="{StaticResource FgSubtext}"/>
+    </Style>
+
+    <!-- ── ToggleButton ─────────────────────────────────────────────────── -->
+    <Style x:Key="DarkToggleButton" TargetType="ToggleButton">
+        <Setter Property="Foreground"      Value="{StaticResource FgText}"/>
+        <Setter Property="Background"      Value="{StaticResource BgSurface0}"/>
+        <Setter Property="BorderBrush"     Value="{StaticResource BgSurface1}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding"         Value="6,3"/>
+        <Setter Property="Cursor"          Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Background"   Value="#89b4fa33"/>
+                            <Setter Property="BorderBrush"  Value="{StaticResource Accent}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource BgSurface1}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="ConnectToggle" BasedOn="{StaticResource DarkToggleButton}" TargetType="ToggleButton">
+        <Setter Property="Width"  Value="80"/>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background"  Value="#40a02b"/>
+                <Setter Property="BorderBrush" Value="#40a02b"/>
+                <Setter Property="Foreground"  Value="White"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="LaserTtlButton" BasedOn="{StaticResource DarkToggleButton}" TargetType="ToggleButton">
+        <Setter Property="FontSize"   Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background"  Value="#40a02b"/>
+                <Setter Property="BorderBrush" Value="#40a02b"/>
+                <Setter Property="Foreground"  Value="White"/>
+                <Setter Property="Content"     Value="LASER ON"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ── TextBox ──────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkTextBox" TargetType="TextBox">
+        <Setter Property="Background"    Value="{StaticResource BgBase}"/>
+        <Setter Property="Foreground"    Value="{StaticResource FgText}"/>
+        <Setter Property="BorderBrush"   Value="{StaticResource BgSurface1}"/>
+        <Setter Property="CaretBrush"    Value="{StaticResource FgText}"/>
+        <Setter Property="Padding"       Value="4,3"/>
+        <Setter Property="FontSize"      Value="12"/>
+    </Style>
+    <Style x:Key="MonoTextBox" BasedOn="{StaticResource DarkTextBox}" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="Consolas, Courier New, monospace"/>
+    </Style>
+
+    <!-- ── ComboBox ─────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkCombo" TargetType="ComboBox">
+        <Setter Property="Background"  Value="{StaticResource BgBase}"/>
+        <Setter Property="Foreground"  Value="{StaticResource FgText}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BgSurface1}"/>
+        <Setter Property="Padding"     Value="4,3"/>
+    </Style>
+
+    <!-- ── ListBox ──────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkListBox" TargetType="ListBox">
+        <Setter Property="Background"  Value="{StaticResource Terminal}"/>
+        <Setter Property="Foreground"  Value="{StaticResource FgText}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BgSurface0}"/>
+        <Setter Property="FontFamily"  Value="Consolas, Courier New, monospace"/>
+        <Setter Property="FontSize"    Value="12"/>
+    </Style>
+    <Style x:Key="GCodeListBox" BasedOn="{StaticResource DarkListBox}" TargetType="ListBox">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <!-- ── Slider ───────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkSlider" TargetType="Slider">
+        <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+    </Style>
+
+    <!-- ── ProgressBar ──────────────────────────────────────────────────── -->
+    <Style x:Key="DarkProgressBar" TargetType="ProgressBar">
+        <Setter Property="Background"   Value="{StaticResource BgSurface0}"/>
+        <Setter Property="Foreground"   Value="{StaticResource Accent}"/>
+        <Setter Property="BorderBrush"  Value="{StaticResource BgSurface1}"/>
+        <Setter Property="Height"       Value="14"/>
+    </Style>
+
+    <!-- ── Separator ────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkSeparator" TargetType="Separator">
+        <Setter Property="Background" Value="{StaticResource BgSurface0}"/>
+    </Style>
+
+    <!-- ── ToolBar ──────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkToolBar" TargetType="ToolBar">
+        <Setter Property="Background"     Value="{StaticResource BgMantle}"/>
+        <Setter Property="Foreground"     Value="{StaticResource FgText}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="BorderBrush"    Value="{StaticResource BgSurface0}"/>
+    </Style>
+
+    <!-- ── StatusBar ────────────────────────────────────────────────────── -->
+    <Style x:Key="DarkStatusBar" TargetType="StatusBar">
+        <Setter Property="Background" Value="{StaticResource BgMantle}"/>
+        <Setter Property="Foreground" Value="{StaticResource FgSubtext}"/>
+        <Setter Property="Height"     Value="24"/>
+    </Style>
+
+    <!-- ── TabControl ───────────────────────────────────────────────────── -->
+    <Style x:Key="DarkTabControl" TargetType="TabControl">
+        <Setter Property="Background"  Value="{StaticResource BgMantle}"/>
+        <Setter Property="Foreground"  Value="{StaticResource FgText}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BgSurface0}"/>
+    </Style>
+
+    <!-- ── WCS Radio ────────────────────────────────────────────────────── -->
+    <Style x:Key="WcsRadio" TargetType="RadioButton">
+        <Setter Property="Foreground"  Value="{StaticResource FgText}"/>
+        <Setter Property="Margin"      Value="2,0"/>
+        <Setter Property="FontSize"    Value="11"/>
+    </Style>
+
+    <!-- ── Limit Indicator ──────────────────────────────────────────────── -->
+    <Style x:Key="LimitIndicator" TargetType="Border">
+        <Setter Property="Width"           Value="36"/>
+        <Setter Property="Height"          Value="36"/>
+        <Setter Property="CornerRadius"    Value="4"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="BorderBrush"     Value="{StaticResource BgSurface1}"/>
+        <Setter Property="Background"      Value="{StaticResource BgBase}"/>
+    </Style>
+    <Style x:Key="LimitLabel" TargetType="TextBlock">
+        <Setter Property="Foreground"          Value="{StaticResource FgSubtext}"/>
+        <Setter Property="FontWeight"          Value="Bold"/>
+        <Setter Property="FontSize"            Value="16"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment"   Value="Center"/>
+    </Style>
+
+</ResourceDictionary>

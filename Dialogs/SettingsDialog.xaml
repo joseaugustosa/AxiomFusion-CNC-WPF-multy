@@ -1,0 +1,189 @@
+<Window x:Class="AxiomFusion.CncController.Dialogs.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configuração da Máquina"
+        Width="540" Height="640"
+        WindowStartupLocation="CenterOwner"
+        Background="#1e1e2e" Foreground="#cdd6f4">
+
+    <DockPanel Margin="8">
+        <!-- Botões OK/Cancel -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="OK"      Width="80" IsDefault="True" Margin="4,0"
+                    Style="{StaticResource PrimaryButton}" Click="BtnOk_Click"/>
+            <Button Content="Cancelar" Width="80" IsCancel="True" Margin="4,0"
+                    Style="{StaticResource SmallButton}"/>
+        </StackPanel>
+
+        <TabControl Style="{StaticResource DarkTabControl}">
+
+            <!-- ── Tab 1: Controlador ────────────────────────────────── -->
+            <TabItem Header="Controlador / M Codes">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+
+                        <!-- Tipo -->
+                        <GroupBox Header="Tipo de Controlador" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <StackPanel Orientation="Horizontal" Margin="4">
+                                <RadioButton x:Name="RbGrbl" Content="GRBL" IsChecked="True"
+                                             Foreground="#cdd6f4" Margin="4,0"/>
+                                <RadioButton x:Name="RbIso" Content="ISO (A20Z / Mach3 / Genérico)"
+                                             Foreground="#cdd6f4" Margin="8,0"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- Preset -->
+                        <GroupBox Header="Preset Rápido" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <StackPanel Orientation="Horizontal" Margin="4">
+                                <Label Content="Controlador:" Style="{StaticResource SmallLabel}" Width="90"/>
+                                <ComboBox x:Name="CmbPreset" Style="{StaticResource DarkCombo}" Width="300"
+                                          SelectionChanged="CmbPreset_Changed"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- M Codes -->
+                        <GroupBox Header="M Codes — Laser / Spindle" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <Grid Margin="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0" Content="M ON (ligar):"   Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TbMOn"   Style="{StaticResource DarkTextBox}" Margin="2" TextChanged="Preview_Changed"/>
+
+                                <Label Grid.Row="1" Content="M OFF (desligar):" Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TbMOff"  Style="{StaticResource DarkTextBox}" Margin="2" TextChanged="Preview_Changed"/>
+
+                                <Label Grid.Row="2" Content="Home:"            Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TbHome"  Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="3" Content="Unlock:"          Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TbUnlock" Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                                <Label Grid.Row="4" Content="Pierce delay (s):" Style="{StaticResource SmallLabel}"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TbPierce" Style="{StaticResource DarkTextBox}" Margin="2" TextChanged="Preview_Changed"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- Preview -->
+                        <Label Content="Preview G-code gerado:" Style="{StaticResource SmallLabel}"/>
+                        <TextBlock x:Name="TbPreview"
+                                   Background="#11111b" Foreground="#a6e3a1"
+                                   FontFamily="Consolas,Courier New" FontSize="12"
+                                   Padding="8" TextWrapping="Wrap" Margin="0,2"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ── Tab 2: Laser ──────────────────────────────────────── -->
+            <TabItem Header="Laser">
+                <StackPanel Margin="8">
+                    <GroupBox Header="Parâmetros Laser" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                        <Grid Margin="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/><RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="S máximo ($30):" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="TbMaxS" Style="{StaticResource DarkTextBox}" Margin="2" TextChanged="Preview_Changed"/>
+
+                            <Label Grid.Row="1" Content="Modo laser:" Style="{StaticResource SmallLabel}"/>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="2">
+                                <RadioButton x:Name="RbPwm" Content="PWM (0-100%)" IsChecked="True"
+                                             Foreground="#cdd6f4" Margin="2,0"/>
+                                <RadioButton x:Name="RbTtl" Content="TTL (On/Off)"
+                                             Foreground="#cdd6f4" Margin="8,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ── Tab 3: Ligação ─────────────────────────────────────── -->
+            <TabItem Header="Ligação">
+                <StackPanel Margin="8">
+                    <GroupBox Header="Ligação Série / USB" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                        <Grid Margin="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/><RowDefinition/><RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="Porta COM:" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="TbPort" Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                            <Label Grid.Row="1" Content="Baud rate:" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="TbBaud" Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                            <Label Grid.Row="2" Content="Preset baud:" Style="{StaticResource SmallLabel}"/>
+                            <ComboBox Grid.Row="2" Grid.Column="1" x:Name="CmbBaud"
+                                      Style="{StaticResource DarkCombo}" Margin="2"
+                                      SelectionChanged="CmbBaud_Changed">
+                                <ComboBoxItem Content="9600"/>
+                                <ComboBoxItem Content="19200"/>
+                                <ComboBoxItem Content="57600"/>
+                                <ComboBoxItem Content="115200" IsSelected="True"/>
+                                <ComboBoxItem Content="230400"/>
+                                <ComboBoxItem Content="250000"/>
+                                <ComboBoxItem Content="500000"/>
+                            </ComboBox>
+                        </Grid>
+                    </GroupBox>
+                    <TextBlock Text="Nota: A20Z Flymotion usa tipicamente 115200 baud.&#10;GRBL standard: 115200. Verificar configuração da placa."
+                               Foreground="#6c7086" FontSize="11" Margin="4,4" TextWrapping="Wrap"/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ── Tab 4: Tubo / Máquina ─────────────────────────────── -->
+            <TabItem Header="Tubo / Máquina">
+                <StackPanel Margin="8">
+                    <GroupBox Header="Dimensões do Tubo" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                        <Grid Margin="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/><RowDefinition/><RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Label Grid.Row="0" Content="Largura W (mm):" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="TbW" Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                            <Label Grid.Row="1" Content="Altura H (mm):" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="TbH" Style="{StaticResource DarkTextBox}" Margin="2"/>
+
+                            <Label Grid.Row="2" Content="Standoff (mm):" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="TbStandoff" Style="{StaticResource DarkTextBox}" Margin="2"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Header="Velocidade Jog" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                        <Grid Margin="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Feed jog (mm/min):" Style="{StaticResource SmallLabel}"/>
+                            <TextBox Grid.Column="1" x:Name="TbJogFeed" Style="{StaticResource DarkTextBox}" Margin="2"/>
+                        </Grid>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
+</Window>

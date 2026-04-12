@@ -1,0 +1,80 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.JogPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GroupBox Header="Jog Manual" Style="{StaticResource DarkGroupBox}">
+        <StackPanel>
+            <!-- XY cross -->
+            <Grid Width="180" Height="140" Margin="0,4" HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Row="0" Grid.Column="1" Content="Y+" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Y:1"/>
+                <Button Grid.Row="1" Grid.Column="0" Content="X-" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="X:-1"/>
+                <Button Grid.Row="1" Grid.Column="1" Content="·" Style="{StaticResource JogCenterButton}"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="X+" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="X:1"/>
+                <Button Grid.Row="2" Grid.Column="1" Content="Y-" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Y:-1"/>
+            </Grid>
+
+            <!-- Z / A -->
+            <Grid Margin="4,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Z+" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Z:1"/>
+                <Button Grid.Column="1" Content="Z-" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="Z:-1"/>
+                <Button Grid.Column="2" Content="A+" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="A:1"/>
+                <Button Grid.Column="3" Content="A-" Style="{StaticResource JogButton}"
+                        Command="{Binding JogAxisCommand}" CommandParameter="A:-1"/>
+            </Grid>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="2,4"/>
+
+            <!-- Step XY -->
+            <StackPanel Orientation="Horizontal" Margin="4,2">
+                <Label Content="Passo XY:" Style="{StaticResource SmallLabel}" Width="72"/>
+                <ComboBox x:Name="CmbStepXY" Style="{StaticResource DarkCombo}"
+                          SelectionChanged="CmbStepXY_SelectionChanged" Width="90">
+                    <ComboBoxItem Content="0.001"/>
+                    <ComboBoxItem Content="0.01"/>
+                    <ComboBoxItem Content="0.1"/>
+                    <ComboBoxItem Content="1.0" IsSelected="True"/>
+                    <ComboBoxItem Content="10.0"/>
+                    <ComboBoxItem Content="100.0"/>
+                </ComboBox>
+                <Label Content="mm" Style="{StaticResource SmallLabel}"/>
+            </StackPanel>
+
+            <!-- Step A -->
+            <StackPanel Orientation="Horizontal" Margin="4,2">
+                <Label Content="Passo A:" Style="{StaticResource SmallLabel}" Width="72"/>
+                <ComboBox x:Name="CmbStepA" Style="{StaticResource DarkCombo}"
+                          SelectionChanged="CmbStepA_SelectionChanged" Width="90">
+                    <ComboBoxItem Content="0.1"/>
+                    <ComboBoxItem Content="1.0" IsSelected="True"/>
+                    <ComboBoxItem Content="10.0"/>
+                    <ComboBoxItem Content="45.0"/>
+                    <ComboBoxItem Content="90.0"/>
+                </ComboBox>
+                <Label Content="°" Style="{StaticResource SmallLabel}"/>
+            </StackPanel>
+
+            <!-- Feed -->
+            <StackPanel Orientation="Horizontal" Margin="4,2">
+                <Label Content="Feed:" Style="{StaticResource SmallLabel}" Width="72"/>
+                <TextBox x:Name="TbFeed" Text="500" Style="{StaticResource DarkTextBox}" Width="90"/>
+                <Label Content="mm/min" Style="{StaticResource SmallLabel}"/>
+            </StackPanel>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

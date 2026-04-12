@@ -1,0 +1,42 @@
+## .NET / C# / WPF
+
+# Build outputs
+bin/
+obj/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docview
+*.vcxproj.filters
+.idea/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+nuget.exe
+
+# Rider
+.idea/
+
+# Publish / deploy
+publish/
+**/Properties/PublishProfiles/
+
+# Runtime data
+*.log
+config/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

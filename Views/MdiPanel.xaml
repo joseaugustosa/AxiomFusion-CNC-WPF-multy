@@ -1,0 +1,24 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.MdiPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GroupBox Header="MDI — Entrada Manual" Style="{StaticResource DarkGroupBox}">
+        <DockPanel>
+            <!-- Input row -->
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+                <Button DockPanel.Dock="Right" Content="Enviar" Width="60"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SendMdiCommand}" Margin="4,0,0,0"/>
+                <TextBox x:Name="TbMdi" Style="{StaticResource MonoTextBox}"
+                         Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="Ex: G0 X0 Y0 Z25 | G10 L20 P1 X0 | M3 S500"
+                         PreviewKeyDown="TbMdi_KeyDown"/>
+            </DockPanel>
+
+            <!-- Histórico -->
+            <ListBox x:Name="LbHistory" Style="{StaticResource DarkListBox}"
+                     ItemsSource="{Binding MdiHistory}"
+                     MouseDoubleClick="LbHistory_DoubleClick"
+                     MinHeight="80" MaxHeight="180"/>
+        </DockPanel>
+    </GroupBox>
+</UserControl>

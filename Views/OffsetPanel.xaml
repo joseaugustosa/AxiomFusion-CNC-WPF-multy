@@ -1,0 +1,47 @@
+<UserControl x:Class="AxiomFusion.CncController.Views.OffsetPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GroupBox Header="Offsets WCS" Style="{StaticResource DarkGroupBox}">
+        <StackPanel>
+            <!-- Selecção WCS -->
+            <Label Content="Sistema de Coordenadas:" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+            <StackPanel Orientation="Horizontal" Margin="4,2">
+                <RadioButton x:Name="RbG54" Content="G54" IsChecked="True" Tag="G54"
+                             Style="{StaticResource WcsRadio}" Click="Wcs_Click"/>
+                <RadioButton x:Name="RbG55" Content="G55" Tag="G55"
+                             Style="{StaticResource WcsRadio}" Click="Wcs_Click"/>
+                <RadioButton x:Name="RbG56" Content="G56" Tag="G56"
+                             Style="{StaticResource WcsRadio}" Click="Wcs_Click"/>
+                <RadioButton x:Name="RbG57" Content="G57" Tag="G57"
+                             Style="{StaticResource WcsRadio}" Click="Wcs_Click"/>
+                <RadioButton x:Name="RbG58" Content="G58" Tag="G58"
+                             Style="{StaticResource WcsRadio}" Click="Wcs_Click"/>
+                <RadioButton x:Name="RbG59" Content="G59" Tag="G59"
+                             Style="{StaticResource WcsRadio}" Click="Wcs_Click"/>
+            </StackPanel>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="4,6"/>
+
+            <!-- Zerar eixo -->
+            <Label Content="Zerar Eixo:" Style="{StaticResource SmallLabel}" Margin="4,0"/>
+            <UniformGrid Rows="2" Columns="2" Margin="4,2">
+                <Button Content="Zero X" Style="{StaticResource SmallButton}" Margin="2"
+                        Tag="X" Click="ZeroAxis_Click"/>
+                <Button Content="Zero Y" Style="{StaticResource SmallButton}" Margin="2"
+                        Tag="Y" Click="ZeroAxis_Click"/>
+                <Button Content="Zero Z" Style="{StaticResource SmallButton}" Margin="2"
+                        Tag="Z" Click="ZeroAxis_Click"/>
+                <Button Content="Zero A" Style="{StaticResource SmallButton}" Margin="2"
+                        Tag="A" Click="ZeroAxis_Click"/>
+            </UniformGrid>
+            <Button Content="Zerar Todos (XYZА)" Style="{StaticResource SmallButton}"
+                    Margin="4,2" Click="ZeroAll_Click"/>
+
+            <Separator Style="{StaticResource DarkSeparator}" Margin="4,6"/>
+
+            <!-- Ir para zero -->
+            <Button Content="Ir para Zero de Trabalho" Style="{StaticResource SmallButton}"
+                    Margin="4,2" Command="{Binding GotoWorkZeroCommand}"/>
+        </StackPanel>
+    </GroupBox>
+</UserControl>

@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using AxiomFusion.CncController.ViewModels;
 
 namespace AxiomFusion.CncController.Views;
@@ -29,32 +28,15 @@ public partial class LaserPanel : UserControl
     private void BtnTtl_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
-        BtnTtl.Content = vm.LaserTtlOn ? "LASER ON" : "LASER OFF";
-        vm.ToggleLaserTtlCommand.Execute(null);
+        bool on = BtnTtl.IsChecked == true;
+        BtnTtl.Content = on ? "LASER ON" : "LASER OFF";
+        vm.SetLaserTtlStateCommand.Execute(on);
     }
 
     private void BtnTestFire_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
         int dur = int.TryParse(TbDuration.Text, out var d) ? d : 500;
-
-        if (vm.LaserMode == "PWM")
-            vm.SetLaserPwmCommand.Execute(null);
-        else
-            vm.ToggleLaserTtlCommand.Execute(null);
-
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(dur) };
-        timer.Tick += (_, _) =>
-        {
-            timer.Stop();
-            if (vm.LaserMode == "PWM")
-            {
-                vm.LaserPwmPct = 0;
-                vm.SetLaserPwmCommand.Execute(null);
-            }
-            else
-                vm.ToggleLaserTtlCommand.Execute(null);
-        };
-        timer.Start();
+        vm.TestLaserFireCommand.Execute(dur);
     }
 }

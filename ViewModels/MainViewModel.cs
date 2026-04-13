@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
@@ -21,6 +23,7 @@ public sealed record SimulationPoseEventArgs(
 
 public partial class MainViewModel : ObservableObject
 {
+    private const string AutoPortName = "AUTO";
     private readonly SettingsManager _settings;
     private IController _ctrl;
 
@@ -43,7 +46,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool    _limitZ;
 
     // ── Ligação ──────────────────────────────────────────────────────────
-    [ObservableProperty] private string  _selectedPort     = "COM3";
+    [ObservableProperty] private string  _selectedPort     = AutoPortName;
     [ObservableProperty] private bool    _isConnected;
     [ObservableProperty] private string  _connectLabel     = "Ligar";
     [ObservableProperty] private string  _controllerTypeLabel = "[GRBL  M3/M5]";
@@ -135,6 +138,7 @@ public partial class MainViewModel : ObservableObject
         _settings = settings;
         _ctrl     = CreateController();
         ConnectControllerEvents();
+        SelectedPort = NormalizePortName(_settings.GetString("port", AutoPortName));
         RefreshPorts();
         LoadMdiHistory();
         UpdateCtrlTypeLabel();
@@ -180,7 +184,7 @@ public partial class MainViewModel : ObservableObject
         else
         {
             int baud = _settings.GetInt("baud", 115200);
-            try { _ctrl.Connect(SelectedPort, baud); }
+            try { ConnectUsingSelectedOrAutoPort(baud); }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Erro de ligação",
@@ -193,9 +197,10 @@ public partial class MainViewModel : ObservableObject
     private void RefreshPorts()
     {
         AvailablePorts.Clear();
+        AvailablePorts.Add(AutoPortName);
         foreach (var p in GrblSerial.ListPorts()) AvailablePorts.Add(p);
-        if (!AvailablePorts.Contains(SelectedPort) && AvailablePorts.Count > 0)
-            SelectedPort = AvailablePorts[0];
+        if (!AvailablePorts.Contains(SelectedPort))
+            SelectedPort = AutoPortName;
     }
 
     [RelayCommand]
@@ -467,11 +472,18 @@ public partial class MainViewModel : ObservableObject
         var parts = s.Split(':');
         if (parts.Length < 2) return;
         string axis = parts[0];
-        double step = double.TryParse(parts[1], out var v)
+        double step = double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v)
             ? v : _settings.GetDouble("jog_step", 1.0);
-        double feed = _settings.GetDouble("jog_feed", 500.0);
+        double feed = parts.Length >= 3 &&
+                      double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var customFeed) &&
+                      customFeed > 0
+            ? customFeed
+            : _settings.GetDouble("jog_feed", 500.0);
         _ctrl.Jog(axis, step, feed);
     }
+
+    [RelayCommand]
+    private void JogCancel() => _ctrl.JogCancel();
 
     // ── Overrides ────────────────────────────────────────────────────────
 
@@ -493,6 +505,37 @@ public partial class MainViewModel : ObservableObject
     {
         LaserTtlOn = !LaserTtlOn;
         _ctrl.SetLaserTtl(LaserTtlOn, MaxSForTorch());
+    }
+
+    [RelayCommand]
+    private void SetLaserTtlState(bool on)
+    {
+        LaserTtlOn = on;
+        _ctrl.SetLaserTtl(on, MaxSForTorch());
+    }
+
+    [RelayCommand]
+    private async Task TestLaserFire(object? param)
+    {
+        int durationMs = param is int ms ? ms : 500;
+        durationMs = Math.Clamp(durationMs, 50, 10000);
+
+        bool wasTtlOn = LaserTtlOn;
+        double pwmForTest = LaserPwmPct > 0.001
+            ? LaserPwmPct
+            : Math.Clamp(_settings.GetDouble("laser_default_power", 50), 1, 100);
+
+        if (string.Equals(LaserMode, "PWM", StringComparison.OrdinalIgnoreCase))
+            _ctrl.SetLaserPwm(pwmForTest, MaxSForTorch());
+        else
+            _ctrl.SetLaserTtl(true, MaxSForTorch());
+
+        await Task.Delay(durationMs);
+        _ctrl.LaserOff();
+        LaserTtlOn = false;
+
+        if (!string.Equals(LaserMode, "PWM", StringComparison.OrdinalIgnoreCase) && wasTtlOn)
+            SetLaserTtlState(true);
     }
 
     /// <summary>Plasma: alternar entre S=intensidade e só M (persiste em plasma_mode).</summary>
@@ -761,7 +804,6 @@ public partial class MainViewModel : ObservableObject
     public void ApplyNewSettings()
     {
         bool wasConnected = IsConnected;
-        string port = SelectedPort;
         int    baud = _settings.GetInt("baud", 115200);
 
         if (wasConnected) _ctrl.Disconnect();
@@ -775,9 +817,11 @@ public partial class MainViewModel : ObservableObject
         var mt = _settings.GetMachineType();
         ApplyMachineType(mt, notify: false);
         RefreshSimulationSettings();
+        SelectedPort = NormalizePortName(_settings.GetString("port", AutoPortName));
+        RefreshPorts();
 
         if (wasConnected)
-            try { _ctrl.Connect(port, baud); } catch { }
+            try { ConnectUsingSelectedOrAutoPort(baud); } catch { }
     }
 
     public void SaveSession()
@@ -790,7 +834,8 @@ public partial class MainViewModel : ObservableObject
     private IController CreateController()
     {
         var codes = CodesForController();
-        return _settings.GetString("controller_type", "GRBL") == "GRBL"
+        var controllerType = _settings.GetString("controller_type", "GRBL");
+        return string.Equals(controllerType, "GRBL", StringComparison.OrdinalIgnoreCase)
             ? new GrblController(codes)
             : new IsoController(codes);
     }
@@ -863,6 +908,48 @@ public partial class MainViewModel : ObservableObject
     {
         foreach (var h in _settings.GetStringList("mdi_history"))
             MdiHistory.Add(h);
+    }
+
+    private void ConnectUsingSelectedOrAutoPort(int baud)
+    {
+        RefreshPorts();
+        string requestedPort = NormalizePortName(SelectedPort);
+        var ports = GrblSerial.ListPorts();
+        var candidates = new List<string>();
+        if (!string.Equals(requestedPort, AutoPortName, StringComparison.OrdinalIgnoreCase))
+            candidates.Add(requestedPort);
+        candidates.AddRange(ports.Where(p => !string.Equals(p, requestedPort, StringComparison.OrdinalIgnoreCase)));
+
+        if (candidates.Count == 0)
+            throw new InvalidOperationException("Nenhuma porta série foi encontrada.");
+
+        Exception? lastError = null;
+        foreach (var port in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            try
+            {
+                _ctrl.Connect(port, baud);
+                SelectedPort = port;
+                _settings.Set("port", string.Equals(requestedPort, AutoPortName, StringComparison.OrdinalIgnoreCase)
+                    ? AutoPortName
+                    : port);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw new InvalidOperationException(
+            "Não foi possível ligar automaticamente a nenhuma porta série.",
+            lastError);
+    }
+
+    private static string NormalizePortName(string? port)
+    {
+        var value = port?.Trim();
+        return string.IsNullOrWhiteSpace(value) ? AutoPortName : value;
     }
 
     // ── Event handlers ────────────────────────────────────────────────────

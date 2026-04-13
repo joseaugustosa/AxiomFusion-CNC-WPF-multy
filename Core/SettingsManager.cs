@@ -23,7 +23,7 @@ public class SettingsManager
         ["m_pierce"]          = 0.5,
 
         // Ligação
-        ["port"]              = "COM3",
+        ["port"]              = "AUTO",
         ["baud"]              = 115200,
 
         // Laser
@@ -72,6 +72,8 @@ public class SettingsManager
         ["logo_spin_deg_per_sec"] = 36.0,
         // Marca de água 2D no viewport (0–1)
         ["viewport_watermark_opacity"] = 0.09,
+        // Cor de fundo do viewport 3D (HEX ARGB/RGB)
+        ["viewport_background"] = "#11111b",
         // Simulação: percentagem da velocidade (feed F e G0)
         ["simulation_speed_percent"] = 100.0,
 

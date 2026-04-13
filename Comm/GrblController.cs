@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using AxiomFusion.CncController.Core;
 
@@ -79,7 +80,8 @@ public sealed class GrblController : ControllerBase
     public override void JogCancel()           => _rtQ.Enqueue(RT_JogCancel);
 
     public override void Jog(string axis, double distance, double feed)
-        => _outQ.Enqueue($"$J=G91 G21 {axis.ToUpperInvariant()}{distance:F3} F{feed:F0}");
+        => _outQ.Enqueue(
+            $"$J=G91 G21 {axis.ToUpperInvariant()}{distance.ToString("F3", CultureInfo.InvariantCulture)} F{feed.ToString("F0", CultureInfo.InvariantCulture)}");
 
     public override void Home()   => _outQ.Enqueue(_mCodes.Home);
     public override void Unlock() => _outQ.Enqueue(_mCodes.Unlock);
@@ -93,7 +95,8 @@ public sealed class GrblController : ControllerBase
 
     public override void SetWcsZero(int wcsNum, Dictionary<string, double> axes)
     {
-        var axStr = string.Join(" ", axes.Select(kv => $"{kv.Key.ToUpperInvariant()}{kv.Value:F3}"));
+        var axStr = string.Join(" ", axes.Select(kv =>
+            $"{kv.Key.ToUpperInvariant()}{kv.Value.ToString("F3", CultureInfo.InvariantCulture)}"));
         SendMdi($"G10 L20 P{wcsNum} {axStr}");
     }
 

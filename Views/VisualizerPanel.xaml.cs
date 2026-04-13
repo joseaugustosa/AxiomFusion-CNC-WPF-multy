@@ -42,6 +42,7 @@ public partial class VisualizerPanel : UserControl
             _settings = value;
             ApplyLogoSpinFromSettings();
             ApplyWatermarkFromSettings();
+            ApplyViewportBackgroundFromSettings();
         }
     }
 
@@ -57,6 +58,27 @@ public partial class VisualizerPanel : UserControl
 
         o = Math.Clamp(o, 0, 1);
         WatermarkViewbox.Opacity = o;
+    }
+
+    /// <summary>Lê <c>viewport_background</c> (HEX) e aplica ao fundo do viewport.</summary>
+    public void ApplyViewportBackgroundFromSettings()
+    {
+        var hex = _settings?.GetString("viewport_background", "#11111b") ?? "#11111b";
+        var fallback = (Color)ColorConverter.ConvertFromString("#11111b");
+        var color = fallback;
+
+        try
+        {
+            color = (Color)ColorConverter.ConvertFromString(hex);
+        }
+        catch
+        {
+            // Mantém fallback se a configuração estiver inválida.
+        }
+
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        Viewport.Background = brush;
     }
 
     private void ApplyLogoSpinFromSettings()
@@ -83,6 +105,7 @@ public partial class VisualizerPanel : UserControl
     {
         ApplyLogoSpinFromSettings();
         ApplyWatermarkFromSettings();
+        ApplyViewportBackgroundFromSettings();
         TryInitLogo3D();
         CompositionTarget.Rendering += OnLogoSpinRendering;
     }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using AxiomFusion.CncController.Core;
 
 namespace AxiomFusion.CncController.Dialogs;
@@ -45,8 +46,10 @@ public partial class SettingsDialog : Window
         TbTurnPlasmaOff.Text = _s.GetString("turn_plasma_off", "M107");
 
         // ── Tab: Controlador ──────────────────────────────────────────────
-        RbGrbl.IsChecked  = _s.GetString("controller_type", "GRBL") == "GRBL";
-        RbIso.IsChecked   = !RbGrbl.IsChecked;
+        var controllerType = _s.GetString("controller_type", "GRBL").Trim();
+        RbGrbl.IsChecked  = string.Equals(controllerType, "GRBL", StringComparison.OrdinalIgnoreCase);
+        RbMach3.IsChecked = string.Equals(controllerType, "MACH3", StringComparison.OrdinalIgnoreCase);
+        RbIso.IsChecked   = RbGrbl.IsChecked != true && RbMach3.IsChecked != true;
         TbMOn.Text        = _s.GetString("m_on",         "M3");
         TbMOff.Text       = _s.GetString("m_off",        "M5");
         TbHome.Text       = _s.GetString("m_home",       "$H");
@@ -63,7 +66,7 @@ public partial class SettingsDialog : Window
         RbPlasmaOnOff.IsChecked = pMode == "ONOFF";
 
         // ── Tab: Ligação ──────────────────────────────────────────────────
-        TbPort.Text       = _s.GetString("port",         "COM3");
+        TbPort.Text       = _s.GetString("port",         "AUTO");
         TbBaud.Text       = _s.GetInt("baud",            115200).ToString();
 
         // ── Tab: Tubo / Máquina ───────────────────────────────────────────
@@ -74,6 +77,7 @@ public partial class SettingsDialog : Window
         SldWatermarkOpacity.Value = Math.Clamp(
             _s.GetDouble("viewport_watermark_opacity", 0.09) * 100.0, 0, 100);
         SldSimulationSpeed.Value = Math.Clamp(_s.GetDouble("simulation_speed_percent", 100.0), 10, 400);
+        TbViewportBackground.Text = _s.GetString("viewport_background", "#11111b");
     }
 
     public void SaveToSettings(SettingsManager s)
@@ -99,7 +103,10 @@ public partial class SettingsDialog : Window
         s.Set("turn_plasma_off", TbTurnPlasmaOff.Text.Trim());
 
         // ── Controlador ───────────────────────────────────────────────────
-        s.Set("controller_type", RbGrbl.IsChecked == true ? "GRBL" : "ISO");
+        var controllerType = RbGrbl.IsChecked == true ? "GRBL"
+            : RbMach3.IsChecked == true ? "MACH3"
+            : "ISO";
+        s.Set("controller_type", controllerType);
         s.Set("m_on",    TbMOn.Text.Trim().Length > 0 ? TbMOn.Text.Trim() : "M3");
         s.Set("m_off",   TbMOff.Text.Trim().Length > 0 ? TbMOff.Text.Trim() : "M5");
         s.Set("m_home",  TbHome.Text.Trim());
@@ -114,7 +121,8 @@ public partial class SettingsDialog : Window
         s.Set("plasma_mode", RbPlasmaOnOff.IsChecked == true ? "ONOFF" : "PWM");
 
         // ── Ligação ───────────────────────────────────────────────────────
-        s.Set("port", TbPort.Text.Trim());
+        var port = TbPort.Text.Trim();
+        s.Set("port", string.IsNullOrWhiteSpace(port) ? "AUTO" : port);
         if (int.TryParse(TbBaud.Text, out var baud)) s.Set("baud", baud);
 
         // ── Tubo / Máquina ────────────────────────────────────────────────
@@ -124,6 +132,7 @@ public partial class SettingsDialog : Window
         if (double.TryParse(TbJogFeed.Text,  NumberStyles.Any, CultureInfo.InvariantCulture, out var jf)) s.Set("jog_feed", jf);
         s.Set("viewport_watermark_opacity", SldWatermarkOpacity.Value / 100.0);
         s.Set("simulation_speed_percent", SldSimulationSpeed.Value);
+        s.Set("viewport_background", NormalizeColorHex(TbViewportBackground.Text, "#11111b"));
     }
 
     // ── Presets ───────────────────────────────────────────────────────────
@@ -156,6 +165,18 @@ public partial class SettingsDialog : Window
             TbBaud.Text = item.Content?.ToString() ?? "";
     }
 
+    private void CmbViewportBackgroundPreset_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbViewportBackgroundPreset.SelectedItem is not ComboBoxItem item)
+            return;
+
+        var hex = item.Tag?.ToString();
+        if (string.IsNullOrWhiteSpace(hex))
+            return;
+
+        TbViewportBackground.Text = hex;
+    }
+
     // ── Preview ───────────────────────────────────────────────────────────
 
     private void Preview_Changed(object sender, TextChangedEventArgs e) => UpdatePreview();
@@ -185,7 +206,25 @@ public partial class SettingsDialog : Window
 
     private void BtnOk_Click(object sender, RoutedEventArgs e)
     {
+        TbViewportBackground.Text = NormalizeColorHex(TbViewportBackground.Text, "#11111b");
         DialogResult = true;
         Close();
+    }
+
+    private static string NormalizeColorHex(string? input, string fallback)
+    {
+        var text = input?.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            return fallback;
+
+        try
+        {
+            var color = (Color)ColorConverter.ConvertFromString(text);
+            return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+        catch
+        {
+            return fallback;
+        }
     }
 }

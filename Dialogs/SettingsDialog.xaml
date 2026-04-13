@@ -120,11 +120,13 @@
 
                         <!-- Tipo -->
                         <GroupBox Header="Tipo de Controlador" Style="{StaticResource DarkGroupBox}" Margin="0,4">
-                            <StackPanel Orientation="Horizontal" Margin="4">
+                            <StackPanel Orientation="Vertical" Margin="4">
                                 <RadioButton x:Name="RbGrbl" Content="GRBL" IsChecked="True"
-                                             Foreground="#cdd6f4" Margin="4,0"/>
-                                <RadioButton x:Name="RbIso" Content="ISO (A20Z / Mach3 / Genérico)"
-                                             Foreground="#cdd6f4" Margin="8,0"/>
+                                             Foreground="#cdd6f4" Margin="4,2"/>
+                                <RadioButton x:Name="RbMach3" Content="Mach3"
+                                             Foreground="#cdd6f4" Margin="4,2"/>
+                                <RadioButton x:Name="RbIso" Content="Outro (ISO genérico / A20Z)"
+                                             Foreground="#cdd6f4" Margin="4,2"/>
                             </StackPanel>
                         </GroupBox>
 
@@ -297,6 +299,26 @@
                                                Foreground="#cdd6f4" FontSize="12"
                                                Text="{Binding Value, ElementName=SldSimulationSpeed, StringFormat={}{0:F0}%}"/>
                                 </Grid>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Fundo do viewport 3D" Style="{StaticResource DarkGroupBox}" Margin="0,4">
+                            <StackPanel Margin="4">
+                                <TextBlock Foreground="#6c7086" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                           Text="Define a cor de fundo do viewport (HEX). Ex.: #11111b ou #FF11111B"/>
+                                <ComboBox x:Name="CmbViewportBackgroundPreset"
+                                          Margin="0,0,0,6"
+                                          Style="{StaticResource DarkCombo}"
+                                          SelectionChanged="CmbViewportBackgroundPreset_Changed">
+                                        <ComboBoxItem Content="Selecionar predefinição..." Tag="" IsSelected="True"/>
+                                        <ComboBoxItem Content="Escuro (padrão)" Tag="#11111b"/>
+                                        <ComboBoxItem Content="Claro (suave)" Tag="#ece8e1"/>
+                                        <ComboBoxItem Content="Azul técnico" Tag="#1d2a36"/>
+                                        <ComboBoxItem Content="Cinza neutro" Tag="#2b2b2f"/>
+                                </ComboBox>
+                                <TextBox x:Name="TbViewportBackground"
+                                         Style="{StaticResource DarkTextBox}"
+                                         Margin="0,0,0,0"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>

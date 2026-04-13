@@ -109,6 +109,7 @@ public partial class MainWindow : Window
             dlg.SaveToSettings(_settings);
             _vm.ApplyNewSettings();
             VizPanel.ApplyWatermarkFromSettings();
+            VizPanel.ApplyViewportBackgroundFromSettings();
         }
     }
 

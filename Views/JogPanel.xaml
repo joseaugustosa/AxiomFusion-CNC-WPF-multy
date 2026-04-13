@@ -13,7 +13,10 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Y:1"
+                        Tag="Y:1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo Y+">
                     <StackPanel>
                         <Image Style="{StaticResource AxiomUiIconJog}" HorizontalAlignment="Center"/>
@@ -21,7 +24,10 @@
                     </StackPanel>
                 </Button>
                 <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="X:-1"
+                        Tag="X:-1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo X−">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center"/>
@@ -37,7 +43,10 @@
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Button>
                 <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="X:1"
+                        Tag="X:1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo X+">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock Text="X+" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -45,7 +54,10 @@
                     </StackPanel>
                 </Button>
                 <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Y:-1"
+                        Tag="Y:-1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo Y−">
                     <StackPanel>
                         <TextBlock Text="Y−" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -60,7 +72,10 @@
                     <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Z:1"
+                        Tag="Z:1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo Z+">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Image Style="{StaticResource AxiomUiIconJog}" VerticalAlignment="Center"/>
@@ -68,7 +83,10 @@
                     </StackPanel>
                 </Button>
                 <Button Grid.Column="1" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="Z:-1"
+                        Tag="Z:-1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo Z−">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock Text="Z−" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -76,12 +94,18 @@
                     </StackPanel>
                 </Button>
                 <Button Grid.Column="2" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="A:1"
+                        Tag="A:1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo A+ (rotação)">
                     <TextBlock Text="A+" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
                 </Button>
                 <Button Grid.Column="3" Style="{StaticResource JogButton}"
-                        Command="{Binding JogAxisCommand}" CommandParameter="A:-1"
+                        Tag="A:-1"
+                        PreviewMouseLeftButtonDown="JogButton_MouseDown"
+                        PreviewMouseLeftButtonUp="JogButton_MouseUp"
+                        MouseLeave="JogButton_MouseLeave"
                         ToolTip="Jog eixo A− (rotação)">
                     <TextBlock Text="A−" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
                 </Button>

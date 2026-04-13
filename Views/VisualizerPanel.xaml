@@ -12,6 +12,14 @@
                     <TextBlock Text="Ajustar vista" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
+            <Button Style="{StaticResource SmallButton}" Click="BtnZoomIn_Click"
+                    ToolTip="Aproximar vista">
+                <TextBlock Text="Zoom +" VerticalAlignment="Center"/>
+            </Button>
+            <Button Style="{StaticResource SmallButton}" Click="BtnZoomOut_Click"
+                    ToolTip="Afastar vista">
+                <TextBlock Text="Zoom -" VerticalAlignment="Center"/>
+            </Button>
             <Separator/>
             <ToggleButton x:Name="BtnTube" IsChecked="True"
                           Style="{StaticResource DarkToggleButton}" Click="BtnTube_Click"
@@ -44,7 +52,9 @@
                                CoordinateSystemVerticalPosition="Top"
                                ShowFrameRate="False"
                                IsHeadLightEnabled="True"
-                               CameraRotationMode="Trackball">
+                               CameraRotationMode="Trackball"
+                               IsZoomEnabled="True"
+                               MouseWheel="Viewport_MouseWheel">
 
                 <h:HelixViewport3D.DefaultCamera>
                     <PerspectiveCamera FieldOfView="45"

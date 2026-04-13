@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
@@ -387,10 +388,47 @@ public partial class VisualizerPanel : UserControl
     // ── Controlos de câmara ───────────────────────────────────────────────
 
     private void BtnFit_Click(object sender, RoutedEventArgs e) => FitView();
+    private void BtnZoomIn_Click(object sender, RoutedEventArgs e) => ApplyZoom(1.2);
+    private void BtnZoomOut_Click(object sender, RoutedEventArgs e) => ApplyZoom(1.0 / 1.2);
+
+    private void Viewport_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        // Garante zoom consistente mesmo quando o comportamento padrão do Helix é suprimido por foco/eventos.
+        ApplyZoom(e.Delta > 0 ? 1.12 : 1.0 / 1.12);
+        e.Handled = true;
+    }
 
     private void FitView()
     {
         Viewport.ZoomExtents(animationTime: 500);
+    }
+
+    private void ApplyZoom(double factor)
+    {
+        if (factor <= 0 || Viewport.Camera is null) return;
+
+        switch (Viewport.Camera)
+        {
+            case PerspectiveCamera pc:
+            {
+                var look = pc.LookDirection;
+                var target = pc.Position + look;
+                var nextLook = look / factor;
+
+                if (nextLook.LengthSquared < 1e-6)
+                    return;
+
+                pc.LookDirection = nextLook;
+                pc.Position = target - nextLook;
+                break;
+            }
+            case OrthographicCamera oc:
+            {
+                var nextWidth = oc.Width / factor;
+                oc.Width = Math.Clamp(nextWidth, 1.0, 1_000_000.0);
+                break;
+            }
+        }
     }
 
     private void BtnTube_Click(object sender, RoutedEventArgs e)

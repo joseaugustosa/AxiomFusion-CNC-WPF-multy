@@ -273,11 +273,52 @@
 
     <!-- ── ComboBox ─────────────────────────────────────────────────────── -->
     <Style x:Key="DarkCombo" TargetType="ComboBox">
+        <Style.Resources>
+            <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#1e1e2e"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#1e1e2e"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#cdd6f4"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#cdd6f4"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#45475a"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#cdd6f4"/>
+        </Style.Resources>
         <Setter Property="Background"  Value="{StaticResource BgBase}"/>
         <Setter Property="Foreground"  Value="{StaticResource FgText}"/>
         <Setter Property="BorderBrush" Value="{StaticResource BgSurface1}"/>
         <Setter Property="Padding"     Value="4,3"/>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="Background" Value="{StaticResource BgBase}"/>
+                    <Setter Property="Foreground" Value="{StaticResource FgText}"/>
+                    <Setter Property="Padding" Value="6,3"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ComboBoxItem">
+                                <Border x:Name="ItemBorder" Background="{TemplateBinding Background}">
+                                    <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsHighlighted" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgSurface1}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="#89b4fa33"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.5"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
     </Style>
+    <Style TargetType="ComboBox" BasedOn="{StaticResource DarkCombo}"/>
 
     <!-- ── ListBox ──────────────────────────────────────────────────────── -->
     <Style x:Key="DarkListBox" TargetType="ListBox">
